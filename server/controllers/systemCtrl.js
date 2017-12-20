@@ -29,7 +29,6 @@ function getNameAndVersion () {
  * About page
  */
 function getAbout (req, res) {
-  const paths = getPaths()
   const appName = getNameAndVersion()
   res.status(200).send(
     `<!doctype html>

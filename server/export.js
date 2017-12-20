@@ -57,7 +57,7 @@ async function getAssignmentIdsAndHeaders ({canvasApi, canvasCourseId}) {
   return {assignmentIds, headers}
 }
 
-async function createSubmissionLine ({student, ldapClient, assignmentIds}) {
+async function createFixedColumnsContent ({student, ldapClient, section, canvasUser, customColumns, customColumnsData}) {
   let row
   try {
     const ugUser = await ldap.lookupUser(ldapClient, student.sis_user_id)
@@ -73,18 +73,36 @@ async function createSubmissionLine ({student, ldapClient, assignmentIds}) {
     row = {}
   }
 
-  for (let submission of student.submissions) {
-    row['' + submission.assignment_id] = submission.entered_grade || ''
-  }
   return [
     student.sis_user_id || '',
     student.user_id || '',
-    row['givenName'] || '',
-    row['surname'] || '',
-    `="${row['personnummer'] || ''}"`
-  ].concat(assignmentIds.map(id => row[id] || '-'))
+    section.name || '',
+    row.givenName || '',
+    row.surname || '',
+    `="${row.personnummer || ''}"`,
+    (canvasUser && canvasUser.login_id) || ''
+  ]
 }
-//
+
+async function createSubmissionLineContent ({student, assignmentIds}) {
+  const row = {}
+  for (let submission of student.submissions) {
+    row['' + submission.assignment_id] = submission.entered_grade || ''
+  }
+  return assignmentIds.map(id => row[id] || '-')
+}
+
+async function createCsvLineContent ({student, ldapClient, assignmentIds, section, canvasUser, customColumns, customColumnsData}) {
+  const fixedColumnsContent = await createFixedColumnsContent({student, ldapClient, assignmentIds, section, canvasUser})
+  const assignmentsColumnsContent = await createSubmissionLineContent({student, ldapClient, assignmentIds, section, canvasUser})
+
+  return [
+    ...fixedColumnsContent,
+    // ...customColumnsData,
+    ...assignmentsColumnsContent
+  ]
+}
+
 function exportResults2 (req, res) {
   try {
     // Hack to make Canvas see that the auth is finished and the
@@ -96,7 +114,6 @@ function exportResults2 (req, res) {
     document.location='exportResults3${req._parsedUrl.search}'
   </script>
       `)
-    // res.redirect('download' + req._parsedUrl.search)
   } catch (e) {
     log.error('Export failed:', e)
     res.status(500).send('Trasigt')
@@ -107,28 +124,39 @@ function exportDone (req, res) {
   res.send('Done. The file should now be downloaded to your computer.')
 }
 
+async function curriedIsFake ({usersInCourse}) {
+  return function (student) {
+    return !usersInCourse.find(user => user.id === student.user_id)
+  }
+}
+
+// async function getCustomColumnsFn ({canvasApi, canvasCourseId, canvasApiUrl}) {
+//   const customColumnsData = {}
+//   const customColumns = await canvasApi.recursePages(`${canvasApiUrl}/courses/${canvasCourseId}/custom_gradebook_columns`)
+//   for (let customColumn of customColumns) {
+//     const data = await canvasApi.recursePages(`${canvasApiUrl}/courses/${canvasCourseId}/custom_gradebook_columns/${customColumn.id}/data`)
+//     for (let dataEntry of data) {
+//       customColumnsData[dataEntry.user_id] = customColumnsData[dataEntry.user_id] || {}
+//       customColumnsData[dataEntry.user_id][customColumn.id] = dataEntry.content
+//     }
+//   }
+//   return {
+//     customColumns,
+//     getCustomColumnsData (userId) {
+//       return customColumnsData[userId]
+//     }
+//   }
+// }
+
 async function exportResults3 (req, res) {
   try {
+    const fetchedSections = {}
+
     const courseRound = req.query.courseRound
     const canvasCourseId = req.query.canvasCourseId
     log.info(`Should export for ${courseRound} / ${canvasCourseId}`)
-    const ldapClient = await ldap.getBoundClient()
-    const accessToken = await getAccessToken({
-      clientId: settings.canvas.clientId,
-      clientSecret: settings.canvas.clientSecret,
-      redirectUri: req.protocol + '://' + req.get('host') + req.originalUrl,
-      code: req.query.code
-    })
 
-    const canvasApi = new CanvasApi(canvasApiUrl, accessToken)
-    const students = await canvasApi.requestCanvas(`courses/${canvasCourseId}/students/submissions?grouped=1&student_ids[]=all`)
-
-    // const users = await canvasApi.recursePages(`${canvasApiUrl}/courses/${canvasCourseId}/users`)
-    // console.log('users: ', users)
-    // So far so good, start constructing the output
-    const {assignmentIds, headers} = await getAssignmentIdsAndHeaders({canvasApi, canvasCourseId})
-    const csvHeader = ['SIS User ID', 'ID', 'Name', 'Surname', 'Personnummer'].concat(assignmentIds.map(id => headers[id]))
-
+    // Start writing response as soon as possible
     res.set({
       'content-type': 'text/csv; charset=utf-8',
       'location': 'http://www.kth.se'
@@ -138,19 +166,69 @@ async function exportResults3 (req, res) {
     // Write BOM https://sv.wikipedia.org/wiki/Byte_order_mark
     res.write('\uFEFF')
 
+    const ldapClient = await ldap.getBoundClient()
+
+    log.info('about to get access token using client id:', settings.canvas.clientId)
+
+    const accessToken = await getAccessToken({
+      clientId: settings.canvas.clientId,
+      clientSecret: settings.canvas.clientSecret,
+      redirectUri: req.protocol + '://' + req.get('host') + req.originalUrl,
+      code: req.query.code
+    })
+
+    const canvasApi = new CanvasApi(canvasApiUrl, accessToken)
+
+    // So far so good, start constructing the output
+    const {assignmentIds, headers} = await getAssignmentIdsAndHeaders({canvasApi, canvasCourseId})
+
+    // const {getCustomColumnsData, customColumns} = await getCustomColumnsFn({canvasApi, canvasCourseId, canvasApiUrl})
+
+    const fixedColumnHeaders = [
+      'SIS User ID',
+      'ID',
+      'Section',
+      'Name',
+      'Surname',
+      'Personnummer',
+      'Email address']
+
+    // Note that the order of these columns has to match that returned from the 'createCsvLineContent' function
+    const csvHeader = [
+      ...fixedColumnHeaders,
+      // ...customColumns.map(c => c.title),
+      ...assignmentIds.map(id => headers[id])
+    ]
+
     res.write(csv.createLine(csvHeader))
+
+    const students = await canvasApi.requestUrl(`courses/${canvasCourseId}/students/submissions?grouped=1&student_ids[]=all`)
+
+    const usersInCourse = await canvasApi.recursePages(`${canvasApiUrl}/courses/${canvasCourseId}/users`)
+
+    const isFake = await curriedIsFake({usersInCourse})
+
     for (let student of students) {
-      log.info('stundent', student)
-      const csvLine = await createSubmissionLine({student, ldapClient, assignmentIds})
+      if (isFake(student)) {
+        continue
+      }
+      const section = fetchedSections[student.section_id] || await canvasApi.requestCanvas(`sections/${student.section_id}`)
+      fetchedSections[student.section_id] = section
+
+      const canvasUser = usersInCourse.find(user => user.sis_user_id === student.sis_user_id)
+      // const customColumnsData = getCustomColumnsData(student.sis_user_id)
+      const csvLine = await createCsvLineContent({student, ldapClient, assignmentIds, section, canvasUser})
+      // const csvLine = await createCsvLineContent({student, ldapClient, assignmentIds, section, canvasUser, customColumns, customColumnsData})
+
       res.write(csv.createLine(csvLine))
     }
     res.send()
+    await ldapClient.unbind()
   } catch (e) {
     log.error(`Export failed for query ${req.query}:`, e)
     res.status(500).send(`
       <html>
       <head>
-      <link rel="stylesheet" href="http://kth.se/social/static/compressed/css/a133edfba1b3.css" type="text/css" media="all">
       </head>
       <div class="error-message alert" role="alert">
                <span class="message">

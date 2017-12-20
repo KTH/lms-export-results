@@ -1,7 +1,7 @@
 function escapeCsvData (str) {
   str = '' + str
 
-  if (str.includes(';')) {
+  if (str.includes(';') || str.includes(',')) {
     str = `"${str}"`
   }
 

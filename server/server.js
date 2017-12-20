@@ -2,7 +2,6 @@
 const server = require('kth-node-server')
 // Now read the server config etc.
 const config = require('./configuration').server
-const AppRouter = require('kth-node-express-routing').PageRouter
 
 // Expose the server and paths
 // server.locals.secret = new Map()
@@ -17,7 +16,6 @@ const cookieParser = require('cookie-parser')
 server.use(bodyParser.json())
 server.use(bodyParser.urlencoded({ extended: true }))
 server.use(cookieParser())
-
 
 /* **********************************
  * ******* APPLICATION ROUTES *******
@@ -51,6 +49,5 @@ server.get(config.proxyPrefixPath.uri + '/test', (req, res) => res.send(`
   `))
 
 // Catch not found and errors
-
 
 module.exports = server
