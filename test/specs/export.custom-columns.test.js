@@ -10,13 +10,13 @@ const getCustomColumnsFn = _export.__get__('getCustomColumnsFn')
 test('should return a function with user_id as argument, and the column data as return value', async t => {
   const userId = 123456
   const canvasCourseId = 0
-  const canvasApi = {recursePages: sinon.stub()}
+  const canvasApi = {get: sinon.stub()}
   const canvasApiUrl = ''
   const columnId = 1
   const columnId2 = 2
 
   // Columns
-  canvasApi.recursePages.withArgs(`/courses/${canvasCourseId}/custom_gradebook_columns`).returns([
+  canvasApi.get.withArgs(`/courses/${canvasCourseId}/custom_gradebook_columns`).returns([
     {
       id: columnId,
       title: 'Anteckningar',
@@ -33,7 +33,7 @@ test('should return a function with user_id as argument, and the column data as 
   ])
 
   // Column data
-  canvasApi.recursePages.withArgs(`/courses/${canvasCourseId}/custom_gradebook_columns/${columnId}/data`).returns(
+  canvasApi.get.withArgs(`/courses/${canvasCourseId}/custom_gradebook_columns/${columnId}/data`).returns(
     [
       {
         content: 'en anteckning...',
@@ -42,7 +42,7 @@ test('should return a function with user_id as argument, and the column data as 
     ]
   )
 
-  canvasApi.recursePages.withArgs(`/courses/${canvasCourseId}/custom_gradebook_columns/${columnId2}/data`).returns(
+  canvasApi.get.withArgs(`/courses/${canvasCourseId}/custom_gradebook_columns/${columnId2}/data`).returns(
     [
       {
         content: 'Nåt annat data i en kolumn',
@@ -112,12 +112,12 @@ test(`should return a function with user_id as argument,
   `, async t => {
   const userId = 123, userId2 = 456
   const canvasCourseId = 0
-  const canvasApi = {recursePages: sinon.stub()}
+  const canvasApi = {get: sinon.stub()}
   const canvasApiUrl = ''
   const columnId = 1
 
   // Columns
-  canvasApi.recursePages.withArgs(`/courses/${canvasCourseId}/custom_gradebook_columns`).returns([
+  canvasApi.get.withArgs(`/courses/${canvasCourseId}/custom_gradebook_columns`).returns([
     {
       id: columnId,
       title: 'Anteckningar',
@@ -128,7 +128,7 @@ test(`should return a function with user_id as argument,
   ])
 
   // Column data
-  canvasApi.recursePages.withArgs(`/courses/${canvasCourseId}/custom_gradebook_columns/${columnId}/data`).returns(
+  canvasApi.get.withArgs(`/courses/${canvasCourseId}/custom_gradebook_columns/${columnId}/data`).returns(
     []
   )
 

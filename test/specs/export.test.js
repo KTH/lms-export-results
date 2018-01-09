@@ -5,12 +5,8 @@ require('rewire-global').enable()
 const proxyquire = require('proxyquire')
 
 class CanvasApi {
-  requestUrl (url) {
+  get (url) {
     console.log('>>>>>>>> Mocking requestUrl <<<<<<<<', url)
-    return []
-  }
-  recursePages () {
-    console.log('>>>>>>>> Mocking recursePages <<<<<<<<')
     return []
   }
 }
