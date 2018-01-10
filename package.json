@@ -24,7 +24,7 @@
     "cookie-parser": "^1.4.3",
     "dotenv": "^4.0.0",
     "express": "^4.16.2",
-    "kth-canvas-api": "^0.15.0",
+    "kth-canvas-api": "^0.15.1",
     "kth-canvas-utilities": "github:kth/kth-canvas-utilities",
     "kth-node-access-log": "github:KTH/kth-node-access-log#v1.0.0",
     "kth-node-api-common": "^0.1.3",
