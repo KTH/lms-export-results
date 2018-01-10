@@ -161,8 +161,8 @@ async function getCustomColumnsFn ({canvasApi, canvasCourseId, canvasApiUrl}) {
   }
 }
 
-function getCustomColumnHeaders(customColumns){
-  return  _.orderBy(customColumns, ['position'], ['asc']).map(c => c.title)
+function getCustomColumnHeaders (customColumns) {
+  return _.orderBy(customColumns, ['position'], ['asc']).map(c => c.title)
 }
 
 async function exportResults3 (req, res) {
@@ -176,7 +176,7 @@ async function exportResults3 (req, res) {
       'content-type': 'text/csv; charset=utf-8',
       'location': 'http://www.kth.se'
     })
-    res.attachment(`${courseRound || 'canvas'}-${moment().format("YYYYMMDD-HHMMSS")}-results.csv`)
+    res.attachment(`${courseRound || 'canvas'}-${moment().format('YYYYMMDD-HHMMSS')}-results.csv`)
     // Write BOM https://sv.wikipedia.org/wiki/Byte_order_mark
     res.write('\uFEFF')
 
@@ -208,35 +208,35 @@ async function exportResults3 (req, res) {
     res.write(csv.createLine(csvHeader))
     const ldapClient = await ldap.getBoundClient()
 
-    // CanvasApi.get now takes a callback function as an argument, to be called after each page is fetched. Use that to start writing as soon as possible
-    const students = await canvasApi.get(`courses/${canvasCourseId}/students/submissions?grouped=1&student_ids[]=all`)
+    await canvasApi.get(`courses/${canvasCourseId}/students/submissions?grouped=1&student_ids[]=all`, async students => {
+      console.log('about to handle a page with the following length:', students.length)
+      // TODO: the following endpoint is deprecated. Change when Instructure has responded on how we should query instead.
+      const usersInCourse = await canvasApi.get(`courses/${canvasCourseId}/students`)
 
-    // TODO: the following endpoint is deprecated. Change when Instructure has responded on how we should query instead.
-    const usersInCourse = await canvasApi.get(`courses/${canvasCourseId}/students`)
+      const isFake = await curriedIsFake({canvasApi, canvasApiUrl, canvasCourseId})
 
-    const isFake = await curriedIsFake({canvasApi, canvasApiUrl, canvasCourseId})
+      for (let student of students) {
+        if (isFake(student)) {
+          continue
+        }
+        const section = fetchedSections[student.section_id] || await canvasApi.get(`sections/${student.section_id}`)
+        fetchedSections[student.section_id] = section
 
-    for (let student of students) {
-      if (isFake(student)) {
-        continue
+        const canvasUser = usersInCourse.find(u => u.id === student.user_id)
+
+        const customColumnsData = getCustomColumnsData(student.user_id)
+        const csvLine = await createCsvLineContent({
+          student,
+          ldapClient,
+          assignmentIds,
+          section,
+          canvasUser,
+          customColumns,
+          customColumnsData})
+
+        res.write(csv.createLine(csvLine))
       }
-      const section = fetchedSections[student.section_id] || await canvasApi.get(`sections/${student.section_id}`)
-      fetchedSections[student.section_id] = section
-
-      const canvasUser = usersInCourse.find(u => u.id === student.user_id)
-
-      const customColumnsData = getCustomColumnsData(student.user_id)
-      const csvLine = await createCsvLineContent({
-        student,
-        ldapClient,
-        assignmentIds,
-        section,
-        canvasUser,
-        customColumns,
-        customColumnsData})
-
-      res.write(csv.createLine(csvLine))
-    }
+    })
     res.send()
     await ldapClient.unbind()
   } catch (e) {
