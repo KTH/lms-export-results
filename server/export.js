@@ -208,12 +208,10 @@ async function exportResults3 (req, res) {
     res.write(csv.createLine(csvHeader))
     const ldapClient = await ldap.getBoundClient()
 
+    const isFake = await curriedIsFake({canvasApi, canvasApiUrl, canvasCourseId})
     await canvasApi.get(`courses/${canvasCourseId}/students/submissions?grouped=1&student_ids[]=all`, async students => {
-      console.log('about to handle a page with the following length:', students.length)
       // TODO: the following endpoint is deprecated. Change when Instructure has responded on how we should query instead.
       const usersInCourse = await canvasApi.get(`courses/${canvasCourseId}/students`)
-
-      const isFake = await curriedIsFake({canvasApi, canvasApiUrl, canvasCourseId})
 
       for (let student of students) {
         if (isFake(student)) {
