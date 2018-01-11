@@ -74,7 +74,7 @@ async function createFixedColumnsContent ({student, ldapClient, section, canvasU
     log.info('No user from ldap, use empty row instead')
     row = {}
   }
-  
+
   return [
     student.sis_user_id || '',
     student.user_id || '',
@@ -217,7 +217,7 @@ async function exportResults3 (req, res) {
           if (isFake(student)) {
             continue
           }
-          const section = fetchedSections[student.section_id] || await canvasApi.get(`sections/${student.section_id}`)
+          const section = fetchedSections[student.section_id] || await canvasApi.requestUrl(`sections/${student.section_id}`)
           fetchedSections[student.section_id] = section
 
           const canvasUser = usersInCourse.find(u => u.id === student.user_id)
