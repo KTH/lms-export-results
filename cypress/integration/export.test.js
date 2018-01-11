@@ -13,10 +13,10 @@ function login () {
 describe('Export', () => {
   it('should download a csv file', () => {
     login()
-    cy.visit('https://kth.test.instructure.com/courses/4/external_tools/489?display=borderless')
+    cy.visit('https://kth.test.instructure.com/courses/4/external_tools/536?display=borderless')
 
     cy.contains('Godkänn').click()
-
+    console.log('efter click...')
     // The file should be downloaded now. Check the ~/Downloads folder.
 
     // cy.exec('node cypress/integration/check-downloaded-file.js')
