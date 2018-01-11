@@ -182,6 +182,19 @@ async function exportResults3 (req, res) {
   const ldapClient = await ldap.getBoundClient()
 
   try {
+    const fetchedSections = {}
+    const courseRound = req.query.courseRound
+    const canvasCourseId = req.query.canvasCourseId
+    log.info(`Should export for ${courseRound} / ${canvasCourseId}`)
+    // Start writing response as soon as possible
+    res.set({
+      'content-type': 'text/csv; charset=utf-8',
+      'location': 'http://www.kth.se'
+    })
+    res.attachment(`${courseRound || 'canvas'}-${moment().format("YYYYMMDD-HHMMSS")}-results.csv`)
+    // Write BOM https://sv.wikipedia.org/wiki/Byte_order_mark
+    res.write('\uFEFF')
+
     const accessToken = await getAccessToken({
       clientId: settings.canvas.clientId,
       clientSecret: settings.canvas.clientSecret,
@@ -208,6 +221,7 @@ async function exportResults3 (req, res) {
       ...assignmentIds.map(id => headers[id])
     ]
     res.write(csv.createLine(csvHeader))
+    const ldapClient = await ldap.getBoundClient()
 
     const isFake = await curriedIsFake({canvasApi, canvasApiUrl, canvasCourseId})
     await canvasApi.get(`courses/${canvasCourseId}/students/submissions?grouped=1&student_ids[]=all`, async students => {
