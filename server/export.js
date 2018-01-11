@@ -212,7 +212,7 @@ async function exportResults3 (req, res) {
     const students = await canvasApi.get(`courses/${canvasCourseId}/students/submissions?grouped=1&student_ids[]=all`)
 
     // TODO: the following endpoint is deprecated. Change when Instructure has responded on how we should query instead.
-    const usersInCourse = await canvasApi.get(`courses/${canvasCourseId}/students`)
+    const usersInCourse = await canvasApi.get(`courses/${canvasCourseId}/users?enrollment_type[]=student&per_page=100`)
 
     const isFake = await curriedIsFake({canvasApi, canvasApiUrl, canvasCourseId})
 
