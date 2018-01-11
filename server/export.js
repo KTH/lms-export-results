@@ -74,7 +74,7 @@ async function createFixedColumnsContent ({student, ldapClient, section, canvasU
     log.info('No user from ldap, use empty row instead')
     row = {}
   }
-
+  
   return [
     student.sis_user_id || '',
     student.user_id || '',
@@ -82,7 +82,7 @@ async function createFixedColumnsContent ({student, ldapClient, section, canvasU
     row.givenName || '',
     row.surname || '',
     `="${row.personnummer || ''}"`,
-    (canvasUser && canvasUser.login_id) || ''
+    (canvasUser && canvasUser.login_id) || "Not displaying email for users that hasn't accepted invitation to course."
   ]
 }
 
@@ -211,8 +211,7 @@ async function exportResults3 (req, res) {
 
     const isFake = await curriedIsFake({canvasApi, canvasApiUrl, canvasCourseId})
     await canvasApi.get(`courses/${canvasCourseId}/students/submissions?grouped=1&student_ids[]=all`, async students => {
-      // TODO: the following endpoint is deprecated. Change when Instructure has responded on how we should query instead.
-      const usersInCourse = await canvasApi.get(`courses/${canvasCourseId}/students`)
+      const usersInCourse = await canvasApi.get(`courses/${canvasCourseId}/users?enrollment_type[]=student&per_page=100`)
       for (let student of students) {
         try {
           if (isFake(student)) {
