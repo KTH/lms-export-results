@@ -74,7 +74,7 @@ async function createFixedColumnsContent ({student, ldapClient, section, canvasU
     log.info('No user from ldap, use empty row instead')
     row = {}
   }
-
+  
   return [
     student.sis_user_id || '',
     student.user_id || '',
@@ -82,7 +82,7 @@ async function createFixedColumnsContent ({student, ldapClient, section, canvasU
     row.givenName || '',
     row.surname || '',
     `="${row.personnummer || ''}"`,
-    (canvasUser && canvasUser.login_id) || ''
+    (canvasUser && canvasUser.login_id) || "Not displaying email for users that hasn't accepted invitation to course."
   ]
 }
 
@@ -161,25 +161,27 @@ async function getCustomColumnsFn ({canvasApi, canvasCourseId, canvasApiUrl}) {
   }
 }
 
-function getCustomColumnHeaders(customColumns){
-  return  _.orderBy(customColumns, ['position'], ['asc']).map(c => c.title)
+function getCustomColumnHeaders (customColumns) {
+  return _.orderBy(customColumns, ['position'], ['asc']).map(c => c.title)
 }
 
 async function exportResults3 (req, res) {
-  try {
-    const fetchedSections = {}
-    const courseRound = req.query.courseRound
-    const canvasCourseId = req.query.canvasCourseId
-    log.info(`Should export for ${courseRound} / ${canvasCourseId}`)
-    // Start writing response as soon as possible
-    res.set({
-      'content-type': 'text/csv; charset=utf-8',
-      'location': 'http://www.kth.se'
-    })
-    res.attachment(`${courseRound || 'canvas'}-${moment().format("YYYYMMDD-HHMMSS")}-results.csv`)
-    // Write BOM https://sv.wikipedia.org/wiki/Byte_order_mark
-    res.write('\uFEFF')
+  const fetchedSections = {}
+  const courseRound = req.query.courseRound
+  const canvasCourseId = req.query.canvasCourseId
+  log.info(`Should export for ${courseRound} / ${canvasCourseId}`)
+  // Start writing response as soon as possible
+  res.set({
+    'content-type': 'text/csv; charset=utf-8',
+    'location': 'http://www.kth.se'
+  })
+  res.attachment(`${courseRound || 'canvas'}-${moment().format('YYYYMMDD-HHMMSS')}-results.csv`)
+  // Write BOM https://sv.wikipedia.org/wiki/Byte_order_mark
+  res.write('\uFEFF')
 
+  const ldapClient = await ldap.getBoundClient()
+
+  try {
     const accessToken = await getAccessToken({
       clientId: settings.canvas.clientId,
       clientSecret: settings.canvas.clientSecret,
@@ -206,62 +208,45 @@ async function exportResults3 (req, res) {
       ...assignmentIds.map(id => headers[id])
     ]
     res.write(csv.createLine(csvHeader))
-    const ldapClient = await ldap.getBoundClient()
-
-    // CanvasApi.get now takes a callback function as an argument, to be called after each page is fetched. Use that to start writing as soon as possible
-    const students = await canvasApi.get(`courses/${canvasCourseId}/students/submissions?grouped=1&student_ids[]=all`)
-
-    // TODO: the following endpoint is deprecated. Change when Instructure has responded on how we should query instead.
-    const usersInCourse = await canvasApi.get(`courses/${canvasCourseId}/users?enrollment_type[]=student&per_page=100`)
 
     const isFake = await curriedIsFake({canvasApi, canvasApiUrl, canvasCourseId})
+    await canvasApi.get(`courses/${canvasCourseId}/students/submissions?grouped=1&student_ids[]=all`, async students => {
+      const usersInCourse = await canvasApi.get(`courses/${canvasCourseId}/users?enrollment_type[]=student&per_page=100`)
+      for (let student of students) {
+        try {
+          if (isFake(student)) {
+            continue
+          }
+          const section = fetchedSections[student.section_id] || await canvasApi.get(`sections/${student.section_id}`)
+          fetchedSections[student.section_id] = section
 
-    for (let student of students) {
-      if (isFake(student)) {
-        continue
+          const canvasUser = usersInCourse.find(u => u.id === student.user_id)
+          const customColumnsData = getCustomColumnsData(student.user_id)
+          const csvLine = await createCsvLineContent({
+            student,
+            ldapClient,
+            assignmentIds,
+            section,
+            canvasUser,
+            customColumns,
+            customColumnsData})
+
+          res.write(csv.createLine(csvLine))
+        } catch (e) {
+          log.error(`Export failed: `, e)
+          // Instead of writing a status:500, write an error in the file. Otherwise the browser will think that the download is finished.
+          res.write('An error occured when exporting a student. Something is probably missing in this file.')
+        }
       }
-      const section = fetchedSections[student.section_id] || await canvasApi.get(`sections/${student.section_id}`)
-      fetchedSections[student.section_id] = section
-
-      const canvasUser = usersInCourse.find(u => u.id === student.user_id)
-
-      const customColumnsData = getCustomColumnsData(student.user_id)
-      const csvLine = await createCsvLineContent({
-        student,
-        ldapClient,
-        assignmentIds,
-        section,
-        canvasUser,
-        customColumns,
-        customColumnsData})
-
-      res.write(csv.createLine(csvLine))
-    }
-    res.send()
-    await ldapClient.unbind()
+    })
   } catch (e) {
     log.error(`Export failed for query ${req.query}:`, e)
-    res.status(500).send(`
-      <html>
-      <head>
-      </head>
-      <div class="alert alert-danger" role="alert">
-               <span class="message">
-                   <p>
-
-                        <b>Åh nej, något gick fel! </b>
-                   </p>
-                   <p>
-                    Försök gärna igen, så håller vi tummarna att det går bättre nästa gång...
-                  </p>
-                  <p>Fel:</p>
-                  <code>${e.message}</code>
-
-               </span>
-        </div>
-      </html>
-      `)
+    // Instead of writing a status:500, write an error in the file. Otherwise the browser will think that the download is finished.
+    res.write('An error occured when exporting. Something is probably missing in this file.')
   }
+  log.info('Finish the response and close ldap client.')
+  res.send()
+  await ldapClient.unbind()
 }
 
 module.exports = {

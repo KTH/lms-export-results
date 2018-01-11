@@ -7,7 +7,7 @@
   "scripts": {
     "test": "tape \"test/specs/*.test.js\" | tap-spec",
     "start": "NODE_ENV=production node app.js",
-    "start-dev": "NODE_ENV=development nodemon app.js"
+    "start-dev": "nodemon app.js"
   },
   "standard": {
     "ignore": [
@@ -24,7 +24,7 @@
     "cookie-parser": "^1.4.3",
     "dotenv": "^4.0.0",
     "express": "^4.16.2",
-    "kth-canvas-api": "^0.15.0",
+    "kth-canvas-api": "^0.15.2",
     "kth-canvas-utilities": "github:kth/kth-canvas-utilities",
     "kth-node-access-log": "github:KTH/kth-node-access-log#v1.0.0",
     "kth-node-api-common": "^0.1.3",

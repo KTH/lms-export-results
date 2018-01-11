@@ -115,7 +115,9 @@ async function checkIp () {
  * Robots.txt page
  */
 function getRobotsTxt (req, res) {
-  res.type('text').render('system/robots')
+  res.send(`
+    User-agent: *
+    Disallow: /`)
 }
 
 /**
