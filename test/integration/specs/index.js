@@ -33,6 +33,7 @@ test(`should write a file
   driver.findElement(By.id('pseudonym_session_unique_id')).sendKeys(process.env.CANVAS_TESTUSER_USERNAME)
   driver.findElement(By.id('pseudonym_session_password')).sendKeys(process.env.CANVAS_TESTUSER_PASSWORD)
   driver.findElement(By.className('Button--login')).click()
+  driver.get('https://kth.test.instructure.com/courses/4/external_tools/536?display=borderless')
   // driver.wait(until.titleIs('webdriver - Google Search'), 1000)
 
   // driver.findElement(By.name('q')).sendKeys('webdriver')
