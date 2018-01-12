@@ -55,6 +55,7 @@
     "tap-spec": "^4.1.1",
     "tape": "^4.8.0",
     "wd": "^1.5.0",
+    "wdio-firefox-profile-service": "^0.1.1",
     "webdriverio": "^4.10.0"
   },
   "engines": {
