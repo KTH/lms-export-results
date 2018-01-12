@@ -1,4 +1,6 @@
 const test = require('tape')
+require('dotenv').config({path: 'test/.env'})
+
 var webdriverio = require('webdriverio')
 var options = {
   desiredCapabilities: {
@@ -12,12 +14,9 @@ test(`should write a file
   webdriverio
           .remote(options)
           .init()
-          .url('http://www.google.com')
-          .getTitle()
-          .then(function (title) {
-            t.equal(title, 'EMiul....')
-            console.log('Title was: ' + title)
-          })
+          .url('https://kth.test.instructure.com/login/canvas')
+          .setValue('#pseudonym_session_unique_id',process.env.CANVAS_TESTUSER_USERNAME)
+          .setValue('#pseudonym_session_password',process.env.CANVAS_TESTUSER_PASSWORD)
           .end()
           .catch(function (err) {
             console.log(err)

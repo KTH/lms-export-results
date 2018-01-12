@@ -6,6 +6,8 @@
   "private": true,
   "scripts": {
     "test": "tape \"test/specs/*.test.js\" | tap-spec",
+    "test:integration2": "java -jar -Dwebdriver.gecko.driver=./geckodriver selenium-server-standalone-3.5.3.jar & tape \"test/integration/*.test.js\" | tap-spec",
+    "test:integration": "tape \"test/integration/*.test.js\" | tap-spec",
     "start": "NODE_ENV=production node app.js",
     "start-dev": "nodemon app.js"
   },
