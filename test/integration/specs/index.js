@@ -9,13 +9,15 @@ const until = webdriver.until
 /*****************/
 const firefox = require('selenium-webdriver/firefox')
 
+console.log('eeeeee',firefox.pageLoadStrategy)
+
 let profile = new firefox.Profile()
 // profile.addExtension('/path/to/firebug.xpi')
 profile.setPreference('browser.download.folderList', 2)
-profile.setPreference('browser.download.manager.showWhenStarting', false)
-// profile.setPreference("browser.download.dir", "/save/file/to/this/directory");
+profile.setPreference("browser.download.dir", "/tmp/lms-export-results");
 profile.setPreference('browser.helperApps.neverAsk.saveToDisk', 'text/csv')
 
+debugger
 let options = new firefox.Options().setProfile(profile)
 
 /***********/
@@ -34,7 +36,12 @@ test(`should write a file
   driver.findElement(By.id('pseudonym_session_password')).sendKeys(process.env.CANVAS_TESTUSER_PASSWORD)
   driver.findElement(By.className('Button--login')).click()
   driver.get('https://kth.test.instructure.com/courses/4/external_tools/536?display=borderless')
-  driver.findElement(By.css('input[type="submit"]')).click()
+  try{
+      driver.findElement(By.css('input[type="submit"]')).click()
+  }catch(e){
+    console.log('timeout...')
+  }
+  console.log('todo: check the downloaded file!')
   // driver.wait(until.titleIs('webdriver - Google Search'), 1000)
 
   // driver.findElement(By.name('q')).sendKeys('webdriver')
