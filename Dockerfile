@@ -28,4 +28,4 @@ ENV NODE_PATH /application
 
 EXPOSE 3001
 
-ENTRYPOINT ["node", "app.js"]
+CMD ["node", "app.js"]
