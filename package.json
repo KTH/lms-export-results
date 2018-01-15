@@ -42,7 +42,6 @@
     "safe-utils": "0.1.0"
   },
   "devDependencies": {
-    "cypress": "^1.4.1",
     "nodemon": "^1.14.7",
     "proxyquire": "^1.8.0",
     "rewire": "^2.5.2",
