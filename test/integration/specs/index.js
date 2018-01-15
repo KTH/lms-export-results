@@ -4,21 +4,23 @@ require('dotenv').config({path: 'test/.env'})
 const webdriver = require('selenium-webdriver')
 const By = webdriver.By
 const until = webdriver.until
-
-/*****************/
+const rimraf = require('rimraf-promise')
 const firefox = require('selenium-webdriver/firefox')
 
+
+// Set up firefox so that the file will be downloaded in a preferred folder
 let profile = new firefox.Profile()
 profile.setPreference('browser.download.folderList', 2)
-profile.setPreference('browser.download.dir', '/tmp/lms-export-results')
+profile.setPreference('browser.download.dir', folderName)
 profile.setPreference('browser.helperApps.neverAsk.saveToDisk', 'text/csv')
-profile.setPreference("webdriver.load.strategy", "unstable");
+profile.setPreference('webdriver.load.strategy', 'unstable')
 
-console.log('todo: remove the /tmp/lms-export-results directory!')
-console.log('Todo: set the page timeout to something less.')
+console.log('remove the /tmp/lms-export-results directory.')
+
+const folderName = '/tmp/lms-export-results'
+rimraf(folderName)
+
 let options = new firefox.Options().setProfile(profile)
-const fs = require('fs')
-/***********/
 
 const driver = new webdriver.Builder()
     .forBrowser('firefox')
@@ -28,6 +30,9 @@ const driver = new webdriver.Builder()
 test(`should write a file
     with personnummer and name for the student
     if there's one assignment with one submission in the course`, async t => {
+
+  // TODO: create a course in Canvas
+
   await driver.get('https://kth.test.instructure.com/login/canvas')
 
   await driver.findElement(By.id('pseudonym_session_unique_id')).sendKeys(process.env.CANVAS_TESTUSER_USERNAME)
@@ -41,7 +46,7 @@ test(`should write a file
     console.log('timeout. This is good, now check file content...', )
   }
 
-  fs.readdirSync('/tmp/lms-export-results').forEach(file => {
+  fs.readdirSync(folderName).forEach(file => {
     // TODO: read the content of the file
     console.log(file)
   })
