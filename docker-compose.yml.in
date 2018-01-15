@@ -1,18 +1,30 @@
-version: '2'
+version: '3.2'
+
+#
+# Run this integration test by running:
+# ID=$(docker build -q .) | LOCAL_IMAGE_ID=$ID docker-compose -f docker-compose-unit-tests.yml up --abort-on-container-exit
+#
 
 services:
-  api:
-    # Existing image in repository
-    # image: kthse/docker pull kthse/kth-nodejs-api:13.37
+ #############################################
+ # Start app as a container
+ #############################################
+ web:
+   # build from local Dockerfile
+   image: $LOCAL_IMAGE_ID
 
-    # Build from Dockerfile in current directory
-    build: .
+   # LOCAL_IMAGE_ID, IMAGE_NAME and IMAGE_VERSION
 
-    # Configuration
-    environment:
-       SOME_KEY : "a-value"
-       SOME_OTHER_KEY : "my-value"
+   # Since we do not want to add tests to our
+   # production image. We mount the catalog
+   # ‘tests’ on in the repo on your local machine
+   # to /tests on the inside of the container.
+   # The volume mount is done at startup.
+   volumes:
+     - ./test:/application/test
 
-    # Port published from inside the Docker image
-    ports:
-      - 3001
+   # The unit test command that triggers tests to be run
+   # inside the container
+   # This example runs test in package.json which is
+   # part of the kth-azure-app image.
+   command: npm test
