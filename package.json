@@ -8,7 +8,7 @@
     "test": "tape \"test/specs/*.test.js\" | tap-spec",
     "start": "NODE_ENV=production node app.js",
     "start-dev": "nodemon app.js",
-    "install-and-test": "npm install && npm test"
+    "install-and-test": "npm install && npm test --verbose"
   },
   "standard": {
     "ignore": [
