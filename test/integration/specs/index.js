@@ -7,6 +7,7 @@ const until = webdriver.until
 const rimraf = require('rimraf-promise')
 const firefox = require('selenium-webdriver/firefox')
 
+const folderName = '/tmp/lms-export-results'
 
 // Set up firefox so that the file will be downloaded in a preferred folder
 let profile = new firefox.Profile()
@@ -17,7 +18,6 @@ profile.setPreference('webdriver.load.strategy', 'unstable')
 
 console.log('remove the /tmp/lms-export-results directory.')
 
-const folderName = '/tmp/lms-export-results'
 rimraf(folderName)
 
 let options = new firefox.Options().setProfile(profile)
