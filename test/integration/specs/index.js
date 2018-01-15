@@ -9,7 +9,6 @@ const until = webdriver.until
 const firefox = require('selenium-webdriver/firefox')
 
 let profile = new firefox.Profile()
-// profile.addExtension('/path/to/firebug.xpi')
 profile.setPreference('browser.download.folderList', 2)
 profile.setPreference('browser.download.dir', '/tmp/lms-export-results')
 profile.setPreference('browser.helperApps.neverAsk.saveToDisk', 'text/csv')
@@ -36,21 +35,16 @@ test(`should write a file
   await driver.findElement(By.className('Button--login')).click()
   await driver.get('https://kth.test.instructure.com/courses/4/external_tools/536?display=borderless')
   try {
-    // driver.manage().timeouts().pageLoadTimeout(5, TimeUnit.SECONDS)
+    // TODO: should set the timeout to somethinge shorter, since we want it to timeout. But preferably sooner.
     await driver.findElement(By.css('input[type="submit"]')).click()
   } catch (e) {
     console.log('timeout. This is good, now check file content...', )
   }
 
   fs.readdirSync('/tmp/lms-export-results').forEach(file => {
+    // TODO: read the content of the file
     console.log(file)
   })
-  // driver.wait(until.titleIs('webdriver - Google Search'), 1000)
-
-  // driver.findElement(By.name('q')).sendKeys('webdriver')
-  // driver.findElement(By.name('btnG')).click()
-  // driver.wait(until.titleIs('webdriver - Google Search'), 1000)
   await driver.quit()
-
   t.end()
 })
