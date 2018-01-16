@@ -2,7 +2,7 @@ version: '3.2'
 
 #
 # Run this integration test by running:
-# ID=$(docker build -q .) | LOCAL_IMAGE_ID=$ID docker-compose -f docker-compose-unit-tests.yml up --abort-on-container-exit
+# ID=$(docker build -q .) && LOCAL_IMAGE_ID=$ID docker-compose -f docker-compose-unit-tests.yml up --abort-on-container-exit
 #
 
 services:
