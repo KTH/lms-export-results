@@ -50,10 +50,14 @@ async function prepareCourse(course){
   return result
 }
 
+async function setupCourse(){
+  return await prepareCourse(await createCanvasCourse())
+}
+
 test(`should write a file
     with personnummer and name for the student
     if there's one assignment with one submission in the course`, async t => {
-  const course = await prepareCourse(await createCanvasCourse())
+  const course = await setupCourse()
   await driver.get('https://kth.test.instructure.com/login/canvas')
 
   await driver.findElement(By.id('pseudonym_session_unique_id')).sendKeys(process.env.CANVAS_TESTUSER_USERNAME)
