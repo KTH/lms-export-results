@@ -1,5 +1,6 @@
 const test = require('tape')
 require('dotenv').config({path: 'test/.env'})
+const randomstring = require('randomstring')
 
 const webdriver = require('selenium-webdriver')
 const By = webdriver.By
@@ -27,12 +28,24 @@ const driver = new webdriver.Builder()
     .setFirefoxOptions(options)
     .build()
 
+async function setUp () {
+  const courseCode = 'A' + randomstring.generate(5)
+  const course = {
+    name: 'Emil testar lms-export-results',
+    'course_code': courseCode,
+    'sis_course_id': `${courseCode}VT171`
+  }
+
+  const accountId = 14 // Courses that starts with an 'A' is handled by account 14
+  const canvasCourse = await canvasApi.createCourse({course}, accountId)
+  return await canvasApi.createDefaultSection(canvasCourse)
+}
+
 test(`should write a file
     with personnummer and name for the student
     if there's one assignment with one submission in the course`, async t => {
-
   // TODO: create a course in Canvas
-
+  await setUp()
   await driver.get('https://kth.test.instructure.com/login/canvas')
 
   await driver.findElement(By.id('pseudonym_session_unique_id')).sendKeys(process.env.CANVAS_TESTUSER_USERNAME)
