@@ -7,8 +7,10 @@ const By = webdriver.By
 const until = webdriver.until
 const rimraf = require('rimraf-promise')
 const firefox = require('selenium-webdriver/firefox')
-
+const CanvasApi = require('kth-canvas-api')
 const folderName = '/tmp/lms-export-results'
+
+const canvasApi = new CanvasApi(process.env.CANVAS_API_URL, process.env.CANVAS_API_KEY)
 
 // Set up firefox so that the file will be downloaded in a preferred folder
 let profile = new firefox.Profile()
