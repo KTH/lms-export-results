@@ -26,4 +26,4 @@ services:
    # inside the container
    # This example runs test in package.json which is
    # part of the kth-azure-app image.
-   command: npm test
+   command: ["npm", "run", "install-and-test" ]
