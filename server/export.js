@@ -79,7 +79,7 @@ async function createFixedColumnsContent ({student, ldapClient, section, canvasU
     student.sis_user_id || '',
     student.user_id || '',
     section.name || '',
-    row.givenName || '',
+    row.givenName || canvasUser.name || '', // Prefer name from ldap, but if it doesn't exist, use the name in Canvas.
     row.surname || '',
     `="${row.personnummer || ''}"`,
     (canvasUser && canvasUser.login_id) || "Not displaying email for users that hasn't accepted invitation to course."
