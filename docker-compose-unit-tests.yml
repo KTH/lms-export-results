@@ -22,9 +22,6 @@ services:
     volumes:
       - ./test:/application/test
 
-    # Colorize output
-    tty: true
-
    # The unit test command that triggers tests to be run
    # inside the container
    # This example runs test in package.json which is
