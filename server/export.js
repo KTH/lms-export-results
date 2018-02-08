@@ -179,8 +179,6 @@ async function exportResults3 (req, res) {
   // Write BOM https://sv.wikipedia.org/wiki/Byte_order_mark
   res.write('\uFEFF')
 
-  const ldapClient = await ldap.getBoundClient()
-
   try {
     const accessToken = await getAccessToken({
       clientId: settings.canvas.clientId,
@@ -189,6 +187,10 @@ async function exportResults3 (req, res) {
       code: req.query.code
     })
     const canvasApi = new CanvasApi(canvasApiUrl, accessToken)
+    canvasApi.logger = logger
+
+    const ldapClient = await ldap.getBoundClient()
+    ldap.logger = logger
 
     // So far so good, start constructing the output
     const {assignmentIds, headers} = await getAssignmentIdsAndHeaders({canvasApi, canvasCourseId})
