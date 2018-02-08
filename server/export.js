@@ -168,14 +168,17 @@ function getCustomColumnHeaders (customColumns) {
 async function exportResults3 (req, res) {
   const fetchedSections = {}
   const courseRound = req.query.courseRound
+  const fileName = `${courseRound || 'canvas'}-${moment().format('YYYYMMDD-HHMMSS')}-results.csv`
+  const logger = log.init({fileName}) // Make sure to index every log line for this course
+
   const canvasCourseId = req.query.canvasCourseId
-  log.info(`Should export for ${courseRound} / ${canvasCourseId}`)
+  logger.info(`Should export for ${courseRound} / ${canvasCourseId}`)
   // Start writing response as soon as possible
   res.set({
     'content-type': 'text/csv; charset=utf-8',
     'location': 'http://www.kth.se'
   })
-  res.attachment(`${courseRound || 'canvas'}-${moment().format('YYYYMMDD-HHMMSS')}-results.csv`)
+  res.attachment(fileName)
   // Write BOM https://sv.wikipedia.org/wiki/Byte_order_mark
   res.write('\uFEFF')
 
@@ -210,10 +213,9 @@ async function exportResults3 (req, res) {
       ...assignmentIds.map(id => headers[id])
     ]
     res.write(csv.createLine(csvHeader))
-
+    const usersInCourse = await canvasApi.get(`courses/${canvasCourseId}/users?enrollment_type[]=student&per_page=100`)
     const isFake = await curriedIsFake({canvasApi, canvasApiUrl, canvasCourseId})
     await canvasApi.get(`courses/${canvasCourseId}/students/submissions?grouped=1&student_ids[]=all`, async students => {
-      const usersInCourse = await canvasApi.get(`courses/${canvasCourseId}/users?enrollment_type[]=student&per_page=100`)
       for (let student of students) {
         try {
           if (isFake(student)) {
@@ -235,18 +237,18 @@ async function exportResults3 (req, res) {
 
           res.write(csv.createLine(csvLine))
         } catch (e) {
-          log.error(`Export failed: `, e)
+          logger.error(`Export failed: `, e)
           // Instead of writing a status:500, write an error in the file. Otherwise the browser will think that the download is finished.
           res.write('An error occured when exporting a student. Something is probably missing in this file.')
         }
       }
     })
   } catch (e) {
-    log.error(`Export failed for query ${req.query}:`, e)
+    logger.error(`Export failed for query ${req.query}:`, e)
     // Instead of writing a status:500, write an error in the file. Otherwise the browser will think that the download is finished.
     res.write('An error occured when exporting. Something is probably missing in this file.')
   }
-  log.info('Finish the response and close ldap client.')
+  logger.info('Finish the response and close ldap client.')
   res.send()
   await ldapClient.unbind()
 }
