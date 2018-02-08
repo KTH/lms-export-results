@@ -243,6 +243,7 @@ async function exportResults3 (req, res) {
         }
       }
     })
+    await ldapClient.unbind()
   } catch (e) {
     logger.error(`Export failed for query ${req.query}:`, e)
     // Instead of writing a status:500, write an error in the file. Otherwise the browser will think that the download is finished.
@@ -250,7 +251,7 @@ async function exportResults3 (req, res) {
   }
   logger.info('Finish the response and close ldap client.')
   res.send()
-  await ldapClient.unbind()
+
 }
 
 module.exports = {
