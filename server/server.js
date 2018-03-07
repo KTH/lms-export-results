@@ -1,7 +1,7 @@
 'use strict'
 const server = require('kth-node-server')
 // Now read the server config etc.
-const config = require('./configuration').server
+const config = require('../config/serverSettings')
 const prefix = config.proxyPrefixPath.uri
 
 /* *******************************
@@ -11,7 +11,7 @@ const prefix = config.proxyPrefixPath.uri
 const path = require('path')
 const express = require('express')
 
-server.use(prefix +'/kth-style', express.static(path.join(__dirname, '../node_modules/kth-style/dist')))
+server.use(prefix + '/kth-style', express.static(path.join(__dirname, '../node_modules/kth-style/dist')))
 
 /* *******************************
  * ******* REQUEST PARSING *******
@@ -33,7 +33,6 @@ const {monitor, about, paths, robotsTxt} = require('./controllers/systemCtrl')
 
 server.get(prefix + '/_monitor', monitor)
 server.get(prefix + '/_about', about)
-server.get(prefix + '/_paths', paths)
 server.get('/robots.txt', robotsTxt)
 
 server.get(prefix, (req, res) => res.redirect(`${config.proxyPrefixPath.uri}/_about`))
