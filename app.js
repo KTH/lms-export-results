@@ -2,7 +2,7 @@
 // Load .env file if it exists
 require('dotenv').config()
 
-const config = require('./server/configuration').server
+const config = require('./config/serverSettings')
 const server = require('./server/server')
 const log = require('./server/log')
 /* ****************************

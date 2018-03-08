@@ -2,22 +2,15 @@
 
 const log = require('../log')
 const packageFile = require('../../package.json')
-const getPaths = require('kth-node-express-routing').getPaths
-const settings = require('../configuration').server
+const settings = require('../../config/serverSettings')
 const ldap = require('../ldap')
 const rp = require('request-promise')
 const version = require('../../config/version')
 
-/**
- * System controller for functions such as about and monitor.
- * Avoid making changes here in sub-projects.
- */
 module.exports = {
   monitor: getMonitor,
   about: getAbout,
-  robotsTxt: getRobotsTxt,
-  paths: getPathsHandler,
-  checkAPIKey: checkAPIKey
+  robotsTxt: getRobotsTxt
 }
 
 function getNameAndVersion () {
@@ -118,16 +111,4 @@ function getRobotsTxt (req, res) {
   res.send(`
     User-agent: *
     Disallow: /`)
-}
-
-/**
- * GET /_paths
- * Return all paths for the system
- */
-function getPathsHandler (req, res) {
-  res.json(getPaths())
-}
-
-function checkAPIKey (req, res) {
-  res.end()
 }
