@@ -9,7 +9,7 @@ function init(extraConfig) {
   })
 }
 // Export a logger
-module.exports = init()
+module.exports = init({})
 
 // Also export a function to create another logger
 module.exports.init = init
