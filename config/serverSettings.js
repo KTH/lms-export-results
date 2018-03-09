@@ -3,10 +3,10 @@ module.exports = {
   proxyPrefixPath: {
     uri: '/api/lms-export-results'
   },
-  port: process.env.SERVER_PORT,
+  port: process.env.SERVER_PORT || 3001,
 
   ldap: {
-    base: process.env.LDAP_BASE,
+    base: process.env.LDAP_BASE || 'ou=UG,dc=referens,dc=sys.dc=kth,dc=se',
     url: process.env.LDAP_URL || 'ldaps://ldap.referens.sys.kth.se',
     userName: process.env.LDAP_USERNAME,
     password: process.env.LDAP_PASSWORD
