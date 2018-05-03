@@ -29,7 +29,7 @@ server.use(cookieParser())
  */
 
 const { exportResults, exportResults2, exportResults3, exportDone } = require('./export')
-const {monitor, about, paths, robotsTxt} = require('./controllers/systemCtrl')
+const {monitor, about, robotsTxt} = require('./controllers/systemCtrl')
 
 server.get(prefix + '/_monitor', monitor)
 server.get(prefix + '/_about', about)

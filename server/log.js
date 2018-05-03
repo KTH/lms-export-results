@@ -1,7 +1,7 @@
 const bunyan = require('bunyan')
 const packageFile = require('../package.json')
 
-function init(extraConfig) {
+function init (extraConfig) {
   return bunyan.createLogger({
     name: (extraConfig && extraConfig.name) || 'lms-export-logger',
     app: packageFile.name,

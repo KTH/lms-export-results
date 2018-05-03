@@ -251,7 +251,6 @@ async function exportResults3 (req, res) {
   }
   logger.info('Finish the response and close ldap client.')
   res.send()
-
 }
 
 module.exports = {
