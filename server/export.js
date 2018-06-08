@@ -94,9 +94,18 @@ function createCustomColumnsContent ({customColumnsData, customColumns}) {
 function createSubmissionLineContent ({student, assignmentIds}) {
   const row = {}
   for (let submission of student.submissions) {
-    row['' + submission.assignment_id] = submission.entered_grade || ''
+    row['' + submission.assignment_id] = {
+      grade: submission.entered_grade || '',
+      submitted_at: submission.submitted_at || ''
+    }
   }
-  return assignmentIds.map(id => row[id] || '-')
+
+  return _.flatten(assignmentIds.map(id => {
+    const submission = row['' + id] || {grade: '-', submitted_at: '-'}
+    return [submission.submitted_at, submission.grade]
+  }))
+
+
 }
 
 async function createCsvLineContent ({student, ldapClient, assignmentIds, section, canvasUser, customColumns, customColumnsData}) {
@@ -206,11 +215,14 @@ async function exportResults3 (req, res) {
       'Surname',
       'Personnummer',
       'Email address']
+
     // Note that the order of these columns has to match that returned from the 'createCsvLineContent' function
     const csvHeader = [
       ...fixedColumnHeaders,
       ...getCustomColumnHeaders(customColumns),
-      ...assignmentIds.map(id => headers[id])
+      ...(_.flatten(assignmentIds.map(
+        id => [headers[id] + ' - submission date', headers[id] + ' - grade']
+      )))
     ]
     res.write(csv.createLine(csvHeader))
     const usersInCourse = await canvasApi.get(`courses/${canvasCourseId}/users?enrollment_type[]=student&per_page=100`)
