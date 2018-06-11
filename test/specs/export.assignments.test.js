@@ -85,19 +85,17 @@ test('should return string results even for non-existent data', t => {
 
   const result = createSubmissionLineContent({student, assignmentIds})
 
-  t.equal(result.length, 6)
-  t.ok(result[0])
-  t.ok(result[1])
-  t.ok(result[2])
-  t.ok(result[3])
-  t.ok(result[4])
-  t.ok(result[5])
+  t.equal(result.length, 12)
+
+  result.forEach((r, i) => {
+    t.ok(typeof r === 'string', `result[${i}] sould be a string`)
+  })
 
   t.end()
 })
 
 
-test('both functions should return same-length arrays', async t => {
+test('createSubmission 2x elements as getAssignmentIds', async t => {
   const canvasCourseId = 0
   const canvasApi = setupCanvasApi(canvasCourseId, [
     { id: 0, name: 'Assignment 1' },
@@ -116,7 +114,7 @@ test('both functions should return same-length arrays', async t => {
   const result = createSubmissionLineContent({student, assignmentIds})
 
   t.ok(
-    Object.keys(headers).length === result.length,
-    `length of headers and result should be equal. they are ${headers.length} and ${result.length}`)
+    Object.keys(headers).length * 2 === result.length,
+    `length of createSubmission:  ${Object.keys(headers).length}; length of getAssignmentIds:  ${result.length}`)
   t.end()
 })
