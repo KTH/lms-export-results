@@ -126,8 +126,8 @@ function exportResults2 (req, res) {
     <div aria-live="polite" role="alert" class="alert alert-danger">${message}</div>
   `
 
-  if (!req.query || !req.query.courseRound || !req.query.canvasCourseId) {
-    log.info('/export2 accessed with missing parameters. Ignoring the request...')
+  if (!req.query || !req.query.canvasCourseId) {
+    log.warn('/export2 accessed with missing parameters. Ignoring the request...')
     res.status(400).send(errorHtml('The URL you are accessing needs extra parameters, please check it. If you came here by a link, inform us about this error.'))
     return
   }
@@ -135,18 +135,18 @@ function exportResults2 (req, res) {
 
   if (req.query.error) {
     if (req.query.error === 'access_denied') {
-      log.info('/export2 accessed without giving permission. Ignoring the request...')
+      log.warn('/export2 accessed without giving permission. Ignoring the request...')
       res.status(400).send(errorHtml('Access denied. You need to authorize this app to use it'))
       return
     }
 
-    log.info(`/export2 accessed with an unexpected "error" parameter which value is: ${req.query.error}. Ignoring the request...`)
+    log.error(`/export2 accessed with an unexpected "error" parameter which value is: ${req.query.error}. Ignoring the request...`)
     res.status(400).send(errorHtml('An error ocurred. Please try it later'))
     return
   }
 
   if (!req.query.code) {
-    log.info('/export2 accessed without authorization code. Ignoring the request...')
+    log.warn('/export2 accessed without authorization code. Ignoring the request...')
     res.status(400).send(errorHtml('Access denied. You need to authorize this app to use it'))
     return
   }
