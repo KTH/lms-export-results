@@ -121,17 +121,43 @@ async function createCsvLineContent ({student, ldapClient, assignmentIds, sectio
 }
 
 function exportResults2 (req, res) {
+  const errorHtml = (message) => `
+    <link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
+    <div aria-live="polite" role="alert" class="alert alert-danger">${message}</div>
+  `
+
+  if (!req.query || !req.query.canvasCourseId) {
+    log.warn('/export2 accessed with missing parameters. Ignoring the request...')
+    res.status(400).send(errorHtml('The URL you are accessing needs extra parameters, please check it. If you came here by a link, inform us about this error.'))
+    return
+  }
+
+
+  if (req.query.error) {
+    if (req.query.error === 'access_denied') {
+      log.warn('/export2 accessed without giving permission. Ignoring the request...')
+      res.status(400).send(errorHtml('Access denied. You need to authorize this app to use it'))
+      return
+    }
+
+    log.error(`/export2 accessed with an unexpected "error" parameter which value is: ${req.query.error}. Ignoring the request...`)
+    res.status(400).send(errorHtml('An error ocurred. Please try it later'))
+    return
+  }
+
+  if (!req.query.code) {
+    log.warn('/export2 accessed without authorization code. Ignoring the request...')
+    res.status(400).send(errorHtml('Access denied. You need to authorize this app to use it'))
+    return
+  }
+
   try {
     // Hack to make Canvas see that the auth is finished and the
     // 'please wait' text can be removed
     res.send(`
     <link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
-
     <div aria-live="polite" role="alert" class="alert alert-info">Your download should start automatically. If nothing happens within a few minutes, please go back and try again.</div>
-
-  <script>
-    document.location='exportResults3${req._parsedUrl.search}'
-  </script>
+    <script>document.location='exportResults3${req._parsedUrl.search}'</script>
       `)
   } catch (e) {
     log.error('Export failed:', e)
