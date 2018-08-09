@@ -24,7 +24,13 @@ function exportResults (req, res) {
       client_id: settings.canvas.clientId,
       response_type: 'code',
       redirect_uri: nextUrl,
-      scope: 'url:GET|/api/v1/courses/:course_id/assignments'
+      scope: [
+        'url:GET|/api/v1/courses/:course_id/assignments',
+        'url:GET|/api/v1/courses/:course_id/custom_gradebook_columns',
+        'url:GET|/api/v1/courses/:course_id/users',
+        'url:GET|/api/v1/courses/:course_id/students/submissions',
+        'url:GET|/api/v1/sections/:id'
+      ].join(' ')
     })
     res.redirect(basicUrl)
   } catch (e) {
