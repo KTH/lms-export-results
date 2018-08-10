@@ -1,5 +1,5 @@
 'use strict'
-const log = require('./log')
+const defaultLog = require('./log')
 const querystring = require('querystring')
 const rp = require('request-promise')
 const settings = require('../config/serverSettings')
@@ -11,6 +11,8 @@ const _ = require('lodash')
 const canvasApiUrl = `https://${settings.canvas.host}/api/v1`
 
 function exportResults (req, res) {
+  const log = req.log || defaultLog
+
   try {
     let b = req.body
     log.info(`The user ${b.lis_person_sourcedid}, ${b.custom_canvas_user_login_id}, is exporting the course ${b.context_label} with id ${b.custom_canvas_course_id}`)
@@ -23,7 +25,7 @@ function exportResults (req, res) {
     const basicUrl = `https://${settings.canvas.host}/login/oauth2/auth?` + querystring.stringify({client_id: settings.canvas.clientId, response_type: 'code', redirect_uri: nextUrl})
     res.redirect(basicUrl)
   } catch (e) {
-    log.error('Export failed:', e)
+    req.log.error('Export failed:', e)
     res.status(500).send(`<link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
     <div aria-live="polite" role="alert" class="alert alert-danger">Smth has gone wrong, try it later.</div>`)
   }
@@ -59,7 +61,7 @@ async function getAssignmentIdsAndHeaders ({canvasApi, canvasCourseId}) {
   return {assignmentIds, headers}
 }
 
-async function createFixedColumnsContent ({student, ldapClient, section, canvasUser}) {
+async function createFixedColumnsContent ({student, ldapClient, section, canvasUser}, {log = defaultLog} = {}) {
   let row
   try {
     const ugUser = await ldap.lookupUser(ldapClient, student.sis_user_id)
@@ -104,12 +106,10 @@ function createSubmissionLineContent ({student, assignmentIds}) {
     const submission = row['' + id] || {grade: '-', submitted_at: '-'}
     return [submission.submitted_at, submission.grade]
   }))
-
-
 }
 
-async function createCsvLineContent ({student, ldapClient, assignmentIds, section, canvasUser, customColumns, customColumnsData}) {
-  const fixedColumnsContent = await createFixedColumnsContent({student, ldapClient, assignmentIds, section, canvasUser})
+async function createCsvLineContent ({student, ldapClient, assignmentIds, section, canvasUser, customColumns, customColumnsData}, {log = defaultLog} = {}) {
+  const fixedColumnsContent = await createFixedColumnsContent({student, ldapClient, assignmentIds, section, canvasUser}, {log})
   const customColumnsContent = createCustomColumnsContent({customColumnsData, customColumns})
   const assignmentsColumnsContent = createSubmissionLineContent({student, ldapClient, assignmentIds, section, canvasUser})
 
@@ -121,6 +121,8 @@ async function createCsvLineContent ({student, ldapClient, assignmentIds, sectio
 }
 
 function exportResults2 (req, res) {
+  const log = req.log || defaultLog
+
   const errorHtml = (message) => `
     <link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
     <div aria-live="polite" role="alert" class="alert alert-danger">${message}</div>
@@ -131,7 +133,6 @@ function exportResults2 (req, res) {
     res.status(400).send(errorHtml('The URL you are accessing needs extra parameters, please check it. If you came here by a link, inform us about this error.'))
     return
   }
-
 
   if (req.query.error) {
     if (req.query.error === 'access_denied') {
@@ -204,10 +205,10 @@ async function exportResults3 (req, res) {
   const fetchedSections = {}
   const courseRound = req.query.courseRound
   const fileName = `${courseRound || 'canvas'}-${moment().format('YYYYMMDD-HHMMSS')}-results.csv`
-  const logger = log.init({fileName}) // Make sure to index every log line for this course
+  const log = req.log.child({fileName}) || defaultLog.child({fileName})
 
   const canvasCourseId = req.query.canvasCourseId
-  logger.info(`Should export for ${courseRound} / ${canvasCourseId}`)
+  log.info(`Should export for ${courseRound} / ${canvasCourseId}`)
   // Start writing response as soon as possible
   res.set({
     'content-type': 'text/csv; charset=utf-8',
@@ -225,10 +226,10 @@ async function exportResults3 (req, res) {
       code: req.query.code
     })
     const canvasApi = new CanvasApi(canvasApiUrl, accessToken)
-    canvasApi.logger = logger
+    canvasApi.logger = log
 
-    const ldapClient = await ldap.getBoundClient()
-    ldap.logger = logger
+    const ldapClient = await ldap.getBoundClient({log})
+    ldap.logger = log
 
     // So far so good, start constructing the output
     const {assignmentIds, headers} = await getAssignmentIdsAndHeaders({canvasApi, canvasCourseId})
@@ -271,11 +272,14 @@ async function exportResults3 (req, res) {
             section,
             canvasUser,
             customColumns,
-            customColumnsData})
+            customColumnsData
+          }, {
+            log
+          })
 
           res.write(csv.createLine(csvLine))
         } catch (e) {
-          logger.error(`Export failed: `, e)
+          log.error(`Export failed: `, e)
           // Instead of writing a status:500, write an error in the file. Otherwise the browser will think that the download is finished.
           res.write('An error occured when exporting a student. Something is probably missing in this file.')
         }
@@ -283,11 +287,11 @@ async function exportResults3 (req, res) {
     })
     await ldapClient.unbind()
   } catch (e) {
-    logger.error(`Export failed for query ${req.query}:`, e)
+    log.error(`Export failed for query ${req.query}:`, e)
     // Instead of writing a status:500, write an error in the file. Otherwise the browser will think that the download is finished.
     res.write('An error occured when exporting. Something is probably missing in this file.')
   }
-  logger.info('Finish the response and close ldap client.')
+  log.info('Finish the response and close ldap client.')
   res.send()
 }
 
