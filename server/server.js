@@ -30,7 +30,6 @@ server.use(cookieParser())
 const uuid = require('uuid/v4')
 const logger = require('./log')
 server.use((req, res, next) => {
-  const request_id = uuid
   req.id = uuid()
   req.log = logger.child({
     request_id: req.id,
@@ -38,7 +37,6 @@ server.use((req, res, next) => {
   })
   next()
 })
-
 
 /* **********************************
  * ******* APPLICATION ROUTES *******
