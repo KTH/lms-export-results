@@ -25,7 +25,7 @@ function exportResults (req, res) {
     const basicUrl = `https://${settings.canvas.host}/login/oauth2/auth?` + querystring.stringify({client_id: settings.canvas.clientId, response_type: 'code', redirect_uri: nextUrl})
     res.redirect(basicUrl)
   } catch (e) {
-    req.log.error('Export failed:', e)
+    log.error('Export failed:', e)
     res.status(500).send(`<link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
     <div aria-live="polite" role="alert" class="alert alert-danger">Smth has gone wrong, try it later.</div>`)
   }
@@ -205,7 +205,7 @@ async function exportResults3 (req, res) {
   const fetchedSections = {}
   const courseRound = req.query.courseRound
   const fileName = `${courseRound || 'canvas'}-${moment().format('YYYYMMDD-HHMMSS')}-results.csv`
-  const log = req.log.child({fileName}) || defaultLog.child({fileName})
+  const log = (req.log && req.log.child({fileName})) || defaultLog.child({fileName})
 
   const canvasCourseId = req.query.canvasCourseId
   log.info(`Should export for ${courseRound} / ${canvasCourseId}`)
