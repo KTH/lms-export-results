@@ -23,6 +23,23 @@ server.use(bodyParser.json())
 server.use(bodyParser.urlencoded({ extended: true }))
 server.use(cookieParser())
 
+/* *******************************
+ * *** PER-REQUEST MIDDLEWARE ****
+ * *******************************
+ */
+const uuid = require('uuid/v4')
+const logger = require('./log')
+server.use((req, res, next) => {
+  const request_id = uuid
+  req.id = uuid()
+  req.log = logger.child({
+    request_id: req.id,
+    request_path: req.path
+  })
+  next()
+})
+
+
 /* **********************************
  * ******* APPLICATION ROUTES *******
  * **********************************
