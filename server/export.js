@@ -11,7 +11,8 @@ const _ = require('lodash')
 const canvasApiUrl = `https://${settings.canvas.host}/api/v1`
 
 function exportResults (req, res) {
-  const log = req.log || defaultLog
+  const correlationId = req.id
+  const log = (req.log || defaultLog).child({correlation_id: correlationId})
 
   try {
     let b = req.body
@@ -19,7 +20,7 @@ function exportResults (req, res) {
     let courseRound = b.lis_course_offering_sourcedid
     const canvasCourseId = b.custom_canvas_course_id
     const fullUrl = (settings.proxyBase || (req.protocol + '://' + req.get('host'))) + req.originalUrl
-    const nextUrl = fullUrl + '2?' + querystring.stringify({courseRound, canvasCourseId})
+    const nextUrl = fullUrl + '2?' + querystring.stringify({courseRound, canvasCourseId, correlationId})
     log.info('Tell auth to redirect back to', nextUrl)
     log.info('using canvas client id', settings.canvas.clientId)
     const basicUrl = `https://${settings.canvas.host}/login/oauth2/auth?` + querystring.stringify({client_id: settings.canvas.clientId, response_type: 'code', redirect_uri: nextUrl})
@@ -121,7 +122,8 @@ async function createCsvLineContent ({student, ldapClient, assignmentIds, sectio
 }
 
 function exportResults2 (req, res) {
-  const log = req.log || defaultLog
+  const correlationId = req.query.correlationId || req.id
+  const log = (req.log || defaultLog).child({correlation_id: correlationId})
 
   const errorHtml = (message) => `
     <link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
@@ -202,10 +204,11 @@ function getCustomColumnHeaders (customColumns) {
 }
 
 async function exportResults3 (req, res) {
+  const correlationId = req.query.correlationId || req.id
   const fetchedSections = {}
   const courseRound = req.query.courseRound
   const fileName = `${courseRound || 'canvas'}-${moment().format('YYYYMMDD-HHMMSS')}-results.csv`
-  const log = (req.log && req.log.child({fileName})) || defaultLog.child({fileName})
+  const log = (req.log || defaultLog).child({fileName, correlation_id: correlationId})
 
   const canvasCourseId = req.query.canvasCourseId
   log.info(`Should export for ${courseRound} / ${canvasCourseId}`)
