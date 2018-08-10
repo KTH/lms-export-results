@@ -20,7 +20,18 @@ function exportResults (req, res) {
     const nextUrl = fullUrl + '2?' + querystring.stringify({courseRound, canvasCourseId})
     log.info('Tell auth to redirect back to', nextUrl)
     log.info('using canvas client id', settings.canvas.clientId)
-    const basicUrl = `https://${settings.canvas.host}/login/oauth2/auth?` + querystring.stringify({client_id: settings.canvas.clientId, response_type: 'code', redirect_uri: nextUrl})
+    const basicUrl = `https://${settings.canvas.host}/login/oauth2/auth?` + querystring.stringify({
+      client_id: settings.canvas.clientId,
+      response_type: 'code',
+      redirect_uri: nextUrl,
+      scope: [
+        'url:GET|/api/v1/courses/:course_id/assignments',
+        'url:GET|/api/v1/courses/:course_id/custom_gradebook_columns',
+        'url:GET|/api/v1/courses/:course_id/users',
+        'url:GET|/api/v1/courses/:course_id/students/submissions',
+        'url:GET|/api/v1/sections/:id'
+      ].join(' ')
+    })
     res.redirect(basicUrl)
   } catch (e) {
     log.error('Export failed:', e)
