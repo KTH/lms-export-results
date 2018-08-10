@@ -1,6 +1,6 @@
 'use strict'
 
-const log = require('../log')
+const defaultLog = require('../log')
 const packageFile = require('../../package.json')
 const settings = require('../../config/serverSettings')
 const ldap = require('../ldap')
@@ -40,11 +40,12 @@ function getAbout (req, res) {
  * Monitor page
  */
 async function getMonitor (req, res) {
+  const log = req.log || defaultLog
   try {
     log.debug('Start preparing monitor')
     let checks = {
       // Async functions that we do not await: Promises?
-      'LDAP': checkLdap(),
+      'LDAP': checkLdap({log}),
       'IP': checkIp()
     }
     let main = {
@@ -72,7 +73,7 @@ function statusRow (name, status) {
   return `${name}: ${status.ok ? 'OK' : 'ERROR'} ${status.msg}\n`
 }
 
-async function getStatus (resultPromise) {
+async function getStatus (resultPromise, {log = defaultLog} = {}) {
   try {
     return await resultPromise
   } catch (err) {
@@ -81,9 +82,9 @@ async function getStatus (resultPromise) {
   }
 }
 
-async function checkLdap () {
-  const ldapClient = await ldap.getBoundClient()
-  const u1famwov = await ldap.lookupUser(ldapClient, 'u1famwov')
+async function checkLdap ({log = defaultLog} = {}) {
+  const ldapClient = await ldap.getBoundClient({log})
+  const u1famwov = await ldap.lookupUser(ldapClient, 'u1famwov', {log})
   if (u1famwov.sn) {
     return {
       'ok': true,
