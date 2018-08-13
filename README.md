@@ -17,12 +17,15 @@ http://localhost:3001/api/lms-export-results/_about
 
 The following settings are needed, either in a .env or in the process
 environment:
+
+```
 CANVAS_CLIENT_ID
 CANVAS_CLIENT_SECRET
 LDAP_URL
 LDAP_USERNAME
 LDAP_PASSWORD
 (PROXY_BASE if the protocol and host that the app sees does not match what the user should see)
+```
 
 
 ### Setup canvas
