@@ -1,7 +1,8 @@
-const log = require('./log')
+const defaultLog = require('./log')
 const ldap = require('ldapjs')
 const settings = require('../config/serverSettings')
-function getBoundClient () {
+
+function getBoundClient ({log = defaultLog} = {}) {
   return new Promise((resolve, reject) => {
     const options = {
       url: settings.ldap.url,
@@ -33,7 +34,7 @@ function getBoundClient () {
   })
 }
 
-function lookupUser (ldapClient, kthid) {
+function lookupUser (ldapClient, kthid, {log = defaultLog} = {}) {
   return new Promise((resolve, reject) => {
     ldapClient.search(
       settings.ldap.base,
