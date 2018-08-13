@@ -56,7 +56,7 @@ async function getMonitor (req, res) {
 
     log.debug('Start collecting monitor results')
     for (let key in checks) {
-      const status = await getStatus(checks[key])
+      const status = await getStatus(checks[key], {log})
       body = body + statusRow(key, status)
       main.ok &= status.ok
     }
