@@ -6,7 +6,7 @@ function getBoundClient ({log = defaultLog} = {}) {
   return new Promise((resolve, reject) => {
     const options = {
       url: settings.ldap.url,
-      timeout: 1000,
+      timeout: 10000,
       connectTimeout: 10000,
       log
     }
