@@ -1,17 +1,30 @@
 FROM node:8.9-wheezy
 FROM kthse/kth-nodejs-api:2.4
 
+RUN mkdir -p /npm && \
+    mkdir -p /application
+
+# We do this to avoid npm install when we're only changing code
+WORKDIR /npm
+
+COPY ["package-lock.json", "package-lock.json"]
+COPY ["package.json", "package.json"]
+RUN npm install --production --no-optional
+
+# Add the code and copy over the node_modules-catalog
+WORKDIR /application
+RUN cp -a /npm/node_modules /application && \
+    rm -rf /npm
+
+# Copy files used by Gulp.
 COPY ["config", "config"]
 COPY ["package.json", "package.json"]
-COPY ["package-lock.json", "package-lock.json"]
 
-# Source files
+# Copy source files, so changes does not trigger gulp.
 COPY ["app.js", "app.js"]
-
-# Source files directories
 COPY ["server", "server"]
 
-RUN npm install --production --no-optional
+ENV NODE_PATH /application
 
 EXPOSE 3001
 
