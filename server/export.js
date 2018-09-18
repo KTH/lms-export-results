@@ -223,6 +223,30 @@ async function exportResults3 (req, res) {
 
   const canvasCourseId = req.query.canvasCourseId
   log.info(`Should export for ${courseRound} / ${canvasCourseId}`)
+
+  let accessToken
+
+  try {
+    accessToken = await getAccessToken({
+      clientId: settings.canvas.clientId,
+      clientSecret: settings.canvas.clientSecret,
+      redirectUri: req.protocol + '://' + req.get('host') + req.originalUrl,
+      code: req.query.code
+    })
+  } catch (e) {
+    log.warn('The access token cannot be retrieved from Canvas', e)
+    res.status(400).send(`<link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
+      <div aria-live="polite" role="alert" class="alert alert-danger">
+        <h3>Access denied</h3>
+        <p>You should launch this application from a Canvas course</p>
+        <ul>
+          <li>If you have refreshed the browser, close the window or tab and launch it again from Canvas</li>
+        </ul>
+      </div>
+    `)
+    return
+  }
+
   // Start writing response as soon as possible
   res.set({
     'content-type': 'text/csv; charset=utf-8',
@@ -233,12 +257,6 @@ async function exportResults3 (req, res) {
   res.write('\uFEFF')
 
   try {
-    const accessToken = await getAccessToken({
-      clientId: settings.canvas.clientId,
-      clientSecret: settings.canvas.clientSecret,
-      redirectUri: req.protocol + '://' + req.get('host') + req.originalUrl,
-      code: req.query.code
-    })
     const canvasApi = new CanvasApi(canvasApiUrl, accessToken)
     canvasApi.logger = log
 
