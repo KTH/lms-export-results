@@ -244,6 +244,7 @@ async function exportResults3 (req, res) {
         </ul>
       </div>
     `)
+      // return to prevent the rest of this function to run
     return
   }
 
