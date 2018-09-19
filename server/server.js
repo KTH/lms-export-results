@@ -44,10 +44,10 @@ server.use((req, res, next) => {
  */
 
 const { exportResults, exportResults2, exportResults3, exportDone } = require('./export')
-const {monitor, about, robotsTxt} = require('./controllers/systemCtrl')
+const {robotsTxt} = require('./controllers/systemCtrl')
+const systemroutes = require('./systemroutes')
 
-server.get(prefix + '/_monitor', monitor)
-server.get(prefix + '/_about', about)
+server.use(prefix, systemroutes)
 server.get('/robots.txt', robotsTxt)
 
 server.get(prefix, (req, res) => res.redirect(`${config.proxyPrefixPath.uri}/_about`))
