@@ -4,6 +4,8 @@ const querystring = require('querystring')
 
 const defaultLog = require('./log')
 const settings = require('../config/serverSettings')
+const csv = require('./csvFile')
+const resultsFile = require('./resultsFile')
 
 const errorHtml = (message) => `
   <link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
@@ -127,8 +129,75 @@ router.get('/download', (req, res) => {
 
 // Third step of Oauth.
 // The CSV file itself
-router.get('/file', (req, res) => {
-  // res.status(501).send('Nothing implemented')
+router.get('/file', async (req, res) => {
+  const correlationId = req.query.correlationId || req.id
+  const courseRound = req.query.courseRound
+  const fileName = `${courseRound || 'canvas'}-${moment().firmat('YYYYMMDD-HHMMSS')}-results.csv`
+  const log = (req.log || defaultLog).child({
+    correlation_id: correlationId,
+    file_name: fileName
+  })
+
+  log.info(`Starting to create CSV file for courseRound ${courseRound} / canvasCourseId:  ${canvasCourseId}`)
+
+  // There are errors that can be handled before starting to create a CSV file.
+  // For example, authorization errors from Canvas
+  let file
+
+  try {
+    // URL with the second step of Oauth
+    const routerUrl = req.protocol + '://' + req.get('host') + req.baseUrl
+    const downloadUrl = routerUrl + '/download?' + querystring.stringify({
+      course_round: b.lis_course_offering_sourcedid,
+      canvas_course_id: b.custom_canvas_course_id,
+      correlation_id: correlationId
+    })
+    const options = {
+      oauth: {
+        code: req.query.code,
+        redirectUri: downloadUrl
+      },
+      log
+    }
+
+    file = await resultsFile(canvasCourseId, courseRound, options)
+  } catch (e) {
+    log.warn('Error getting the token from Canvas. Sending error message to the user', e)
+    res.status(400).send(
+      errorHtml(`
+        <h3>Access denied</h3>
+        <p>You should launch this application from a Canvas course</p>
+        <ul>
+          <li>If you have refreshed the browser, close the window or tab and launch it again from Canvas</li>
+        </ul>
+      `)
+    )
+    return
+  }
+
+  // Errors that cannot be handled before creating the CSV file are handled
+  // once the user starts receiving the file
+  res.set({
+    'content-type': 'text/csv; charset=utf-8',
+    'location': 'https://www.kth.se'
+  })
+  res.attachment(fileName)
+  res.write('\uFEFF')
+
+  try {
+    const headers = await file.getHeaders()
+    res.write(csv.createLine(headers))
+
+    await file.readLine(line => {
+      res.write(csv.createLine(line))
+    })
+
+    log.info('Finish writing file')
+    res.send()
+  } catch (e) {
+    log.error('Error when creating the CSV file', e)
+    res.write('An error ocurred when exporting')
+  }
 })
 
 module.exports = router
