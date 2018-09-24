@@ -1,6 +1,7 @@
 const CanvasApi = require('kth-canvas-api')
 const flatten = require('lodash/flatten')
 const ldap = require('./ldap')
+const rp = require('request-promise')
 
 module.exports = async function createResultsFile (courseId, courseRound, options) {
   const log = options.log
@@ -32,8 +33,8 @@ module.exports = async function createResultsFile (courseId, courseRound, option
   const customColumns = (await canvasApi.get(`/courses/${courseId}/custom_gradebook_columns`))
     .sort((c1, c2) => c1.position - c2.position) // Sort by "position" in "ascending" order:
 
-  const canvasUsers = await canvasApi.get(`courses/${canvasCourseId}/users?enrollment_type[]=student&per_page=100`)
-  const fakeStudents = await canvasApi.get(`courses/${canvasCourseId}/users?enrollment_type[]=student_view`)
+  const canvasUsers = await canvasApi.get(`courses/${courseId}/users?enrollment_type[]=student&per_page=100`)
+  const fakeStudents = await canvasApi.get(`courses/${courseId}/users?enrollment_type[]=student_view`)
   const isReal = (student) => !fakeStudents.find(fake => fake.id === student.id)
 
   // Sections temporal cache
@@ -53,7 +54,7 @@ module.exports = async function createResultsFile (courseId, courseRound, option
 
   // "Fill" the data of the cache grouped by users
   for (let student of canvasUsers) {
-    customColumnCache[student.id] = []
+    customColumnsCache[student.id] = []
   }
 
   for (let column of customColumns) {
