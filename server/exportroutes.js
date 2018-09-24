@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const querystring = require('querystring')
+const moment = require('moment')
 
 const defaultLog = require('./log')
 const settings = require('../config/serverSettings')
@@ -10,11 +11,6 @@ const resultsFile = require('./resultsFile')
 const errorHtml = (message) => `
   <link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
   <div aria-live="polite" role="alert" class="alert alert-danger">${message}</div>
-`
-
-const infoHtml = (message) => `
-  <link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
-  <div aria-live="polite" role="alert" class="alert alert-info">${message}</div>
 `
 
 // First step of Oauth.
@@ -61,7 +57,6 @@ router.post('/start', (req, res) => {
     })
     log.info('Tell auth to redirect back to', downloadUrl.toString())
     res.redirect(canvasAuthUrl)
-
   } catch (e) {
     log.error('Export failed on start', e)
     res.status(500).send(
@@ -126,12 +121,12 @@ router.get('/download', (req, res) => {
   }
 })
 
-
 // Third step of Oauth.
 // The CSV file itself
 router.get('/file', async (req, res) => {
-  const correlationId = req.query.correlationId || req.id
-  const courseRound = req.query.courseRound
+  const correlationId = req.query.correlation_id || req.id
+  const courseRound = req.query.course_round
+  const canvasCourseId = req.query.canvas_course_id
   const fileName = `${courseRound || 'canvas'}-${moment().firmat('YYYYMMDD-HHMMSS')}-results.csv`
   const log = (req.log || defaultLog).child({
     correlation_id: correlationId,
@@ -148,8 +143,8 @@ router.get('/file', async (req, res) => {
     // URL with the second step of Oauth
     const routerUrl = req.protocol + '://' + req.get('host') + req.baseUrl
     const downloadUrl = routerUrl + '/download?' + querystring.stringify({
-      course_round: b.lis_course_offering_sourcedid,
-      canvas_course_id: b.custom_canvas_course_id,
+      course_round: courseRound,
+      canvas_course_id: canvasCourseId,
       correlation_id: correlationId
     })
     const options = {
