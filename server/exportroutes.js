@@ -6,7 +6,7 @@ const moment = require('moment')
 const defaultLog = require('./log')
 const settings = require('../config/serverSettings')
 const csv = require('./csvFile')
-const resultsFile = require('./resultsFile')
+const ResultsFile = require('./resultsFile')
 
 const errorHtml = (message) => `
   <link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
@@ -137,7 +137,7 @@ router.get('/file', async (req, res) => {
 
   // There are errors that can be handled before starting to create a CSV file.
   // For example, authorization errors from Canvas
-  let file
+  let fileContent
 
   try {
     // URL with the second step of Oauth
@@ -155,7 +155,7 @@ router.get('/file', async (req, res) => {
       log
     }
 
-    file = await resultsFile(canvasCourseId, courseRound, options)
+    fileContent = await ResultsFile.create(canvasCourseId, options)
   } catch (e) {
     log.warn('Error getting the token from Canvas. Sending error message to the user', e)
     res.status(400).send(
@@ -179,11 +179,13 @@ router.get('/file', async (req, res) => {
   res.attachment(fileName)
   res.write('\uFEFF')
 
+  await fileContent.preload()
+
   try {
-    const headers = await file.getHeaders()
+    const headers = fileContent.getHeaders()
     res.write(csv.createLine(headers))
 
-    await file.readLine(line => {
+    await fileContent.iterateLines(line => {
       res.write(csv.createLine(line))
     })
 
