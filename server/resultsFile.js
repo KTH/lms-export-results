@@ -87,7 +87,7 @@ module.exports.create = async function createResultsFile (courseId, options) {
           `${a.name} (${a.id}) - submission date`,
           `${a.name} (${a.id}) - grade`
         ])
-        .reduce(flattenReducer)
+        .reduce(flattenReducer, [])
 
       const customColumnsHeaders = customColumns
         .map(column => column.title)
@@ -126,7 +126,7 @@ module.exports.create = async function createResultsFile (courseId, options) {
                 submission.submitted_at,
                 submission.entered_grade
               ])
-              .reduce(flattenReducer)
+              .reduce(flattenReducer, [])
 
             const customColumnsData = await getCustomColumnsData(student.user_id)
 
