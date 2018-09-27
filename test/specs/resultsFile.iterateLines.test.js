@@ -6,15 +6,11 @@ const log = require('bunyan').createLogger({
   level: 0 // Creates a very noisy logger
 })
 
-async function getInstance () {
-  ResultsFile.__set__('rp', () => ({
-    auth: {
-      access_token: 'valid_access_token'
-    }
-  }))
-
-  return ResultsFile.create('canvas_course_id', {log, oauth: {}})
-}
+ResultsFile.__set__('rp', () => ({
+  auth: {
+    access_token: 'valid_access_token'
+  }
+}))
 
 test('"iterateLines()" with 0 students should finish without calling the callback', async t => {
   const fakeLdapClient = {
@@ -30,7 +26,7 @@ test('"iterateLines()" with 0 students should finish without calling the callbac
   ResultsFile.__set__('ldap.getBoundClient', () => fakeLdapClient)
   ResultsFile.__set__('CanvasApi', FakeCanvasApi)
 
-  const file = await getInstance()
+  const file = await ResultsFile.create('canvas_course_id', {log, oauth: {}})
 
   await file.iterateLines(() => {
     t.fail('the callback was called')
@@ -63,7 +59,7 @@ test('"iterateLines()" with 1 student should throw an error if preload() was not
   ResultsFile.__set__('ldap.getBoundClient', () => fakeLdapClient)
   ResultsFile.__set__('CanvasApi', FakeCanvasApi)
 
-  const file = await getInstance()
+  const file = await ResultsFile.create('canvas_course_id', {log, oauth: {}})
 
   try {
     await file.iterateLines(() => {
