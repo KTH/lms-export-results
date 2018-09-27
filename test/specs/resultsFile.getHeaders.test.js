@@ -6,37 +6,35 @@ const log = require('bunyan').createLogger({
   level: 0 // Creates a very noisy logger
 })
 
-async function getInstance () {
-  ResultsFile.__set__('rp', () => ({
-    auth: {
-      access_token: 'valid_access_token'
-    }
-  }))
+ResultsFile.__set__('rp', () => ({
+  auth: {
+    access_token: 'valid_access_token'
+  }
+}))
 
+async function getInstance (canvasApi) {
   return ResultsFile.create('canvas_course_id', {log, oauth: {}})
 }
 
-test('"getHeaders()" not works if "preload()" is not called before', async t => {
-  t.plan(1)
-  const file = await getInstance()
+test('"getHeaders()" should not work if "preload()" is not called before', async t => {
+  const file = await ResultsFile.create('canvas_course_id', {log, oauth: {}})
 
   try {
     file.getHeaders()
   } catch (e) {
     t.pass('should throw an error')
   }
+  t.end()
 })
 
-test('"getHeaders()" returns 7 fixed headers when preload()-ed data is empty', async t => {
-  // A CanvasApi that returns always empty arrays
-  class FakeCanvasApi {
+test('"getHeaders()" should return 7 fixed headers when preload()-ed data is empty', async t => {
+  ResultsFile.__set__('CanvasApi', class FakeCanvasApi {
     get (url) {
       return []
     }
-  }
+  })
 
-  ResultsFile.__set__('CanvasApi', FakeCanvasApi)
-  const file = await getInstance()
+  const file = await ResultsFile.create('canvas_course_id', {log, oauth: {}})
 
   await file.preload()
   const expectedHeaders = [
@@ -53,7 +51,7 @@ test('"getHeaders()" returns 7 fixed headers when preload()-ed data is empty', a
   t.end()
 })
 
-test('"getHeaders()" returns 9 headers when data is one assignment (7 fixed + 2 per assignment)', async t => {
+test('"getHeaders()" should return 9 headers when data is one assignment (7 fixed + 2 per assignment)', async t => {
   const ASSIGNMENT_ID = 'assignment_id'
   const ASSIGNMENT_NAME = 'assignment_name'
   // A CanvasApi that returns always empty arrays
