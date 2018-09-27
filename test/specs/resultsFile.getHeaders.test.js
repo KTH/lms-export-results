@@ -12,10 +12,6 @@ ResultsFile.__set__('rp', () => ({
   }
 }))
 
-async function getInstance (canvasApi) {
-  return ResultsFile.create('canvas_course_id', {log, oauth: {}})
-}
-
 test('"getHeaders()" should not work if "preload()" is not called before', async t => {
   const file = await ResultsFile.create('canvas_course_id', {log, oauth: {}})
 
@@ -66,7 +62,7 @@ test('"getHeaders()" should return 9 headers when data is one assignment (7 fixe
   }
 
   ResultsFile.__set__('CanvasApi', FakeCanvasApi)
-  const file = await getInstance()
+  const file = await ResultsFile.create('canvas_course_id', {log, oauth: {}})
 
   await file.preload()
 
@@ -103,7 +99,7 @@ test('"getHeaders()" returns 15 headers when data are four assignment (7 fixed +
   }
 
   ResultsFile.__set__('CanvasApi', FakeCanvasApi)
-  const file = await getInstance()
+  const file = await ResultsFile.create('canvas_course_id', {log, oauth: {}})
 
   await file.preload()
 
@@ -146,7 +142,7 @@ test('"getHeaders() returns 10 headers when data are 1 assignment + 1 custom col
   }
 
   ResultsFile.__set__('CanvasApi', FakeCanvasApi)
-  const file = await getInstance()
+  const file = await ResultsFile.create('canvas_course_id', {log, oauth: {}})
 
   await file.preload()
 
@@ -173,7 +169,7 @@ test('"getHeaders() returns custom columns sorted by "position" in Canvas', asyn
   }
 
   ResultsFile.__set__('CanvasApi', FakeCanvasApi)
-  const file = await getInstance()
+  const file = await ResultsFile.create('canvas_course_id', {log, oauth: {}})
 
   await file.preload()
 
