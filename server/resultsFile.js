@@ -54,17 +54,17 @@ module.exports.create = async function createResultsFile (courseId, options) {
 
   return {
     async preload () {
-      assignments = await canvasApi.get(`/courses/${courseId}/assignments`)
+      assignments = await canvasApi.get(`courses/${courseId}/assignments`)
       canvasUsers = (await canvasApi.get(`courses/${courseId}/users?enrollment_type[]=student&per_page=100`))
         .forEach(student => {customColumnsCache[student.id] = []})
 
       fakeStudents = await canvasApi.get(`courses/${courseId}/users?enrollment_type[]=student_view`)
 
-      customColumns = (await canvasApi.get(`/courses/${courseId}/custom_gradebook_columns`))
+      customColumns = (await canvasApi.get(`courses/${courseId}/custom_gradebook_columns`))
         .sort((c1, c2) => c1.position - c2.position) // Sort by "position" in "ascending" order
 
       for (let column of customColumns) {
-        const data = await canvasApi.get(`/courses/${courseId}/custom_gradebook_columns/${column.id}/data`)
+        const data = await canvasApi.get(`courses/${courseId}/custom_gradebook_columns/${column.id}/data`)
         for (let d of data) {
           customColumnsCache[d.user_id].push(d.content)
         }
