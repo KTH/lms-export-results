@@ -16,26 +16,62 @@ async function getInstance () {
   return ResultsFile.create('canvas_course_id', {log, oauth: {}})
 }
 
-test('"iterateLines()" should throw an error if "preload()" is not called before', async t => {
+test('"iterateLines()" with 0 students should finish without calling the callback', async t => {
   const fakeLdapClient = {
     unbind: () => {}
   }
   class FakeCanvasApi {
-    get () {
+    get (url, cb) {
+      cb([])
       return []
     }
   }
 
   ResultsFile.__set__('ldap.getBoundClient', () => fakeLdapClient)
   ResultsFile.__set__('CanvasApi', FakeCanvasApi)
-  t.plan(1)
+
+  const file = await getInstance()
+
+  await file.iterateLines(() => {
+    t.fail('the callback was called')
+  })
+
+  t.end()
+})
+
+test('"iterateLines()" with 1 student should throw an error if preload() was not called before', async t => {
+  const fakeLdapClient = {
+    unbind: () => {}
+  }
+  class FakeCanvasApi {
+    async get (url, cb) {
+      if (url.includes('sections')) {
+        return {
+          id: 'section_id',
+          name: 'section_name'
+        }
+      } else if (url.includes('students/submissions')) {
+        await cb([
+          {id: '1'}
+        ])
+      } else {
+        return []
+      }
+    }
+  }
+
+  ResultsFile.__set__('ldap.getBoundClient', () => fakeLdapClient)
+  ResultsFile.__set__('CanvasApi', FakeCanvasApi)
+
   const file = await getInstance()
 
   try {
-    await file.iterateLines(() => {})
+    await file.iterateLines(() => {
+      t.fail('the callback was called')
+    })
   } catch (e) {
     t.pass('should throw an error')
   }
 
-  t.fail('no error returned')
+  t.end()
 })
