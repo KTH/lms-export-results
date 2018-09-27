@@ -1,9 +1,10 @@
 const CanvasApi = require('kth-canvas-api')
-const flatten = require('lodash/flatten')
 const ldap = require('./ldap')
 const rp = require('request-promise')
 
-module.exports = async function createResultsFile (courseId, courseRound, options) {
+const flattenReducer = (acc, el) => [...acc, ...el]
+
+module.exports.create = async function createResultsFile (courseId, options) {
   const log = options.log
 
   let accessToken
@@ -28,17 +29,16 @@ module.exports = async function createResultsFile (courseId, courseRound, option
     throw e
   }
 
+  // From here, the "createResultsFile" function (this function) should finish
+  // as early as possible not awaiting for slow promises
   const canvasApi = new CanvasApi(`https://${process.env.CANVAS_HOST}/api/v1`, accessToken)
-  const assignments = await canvasApi.get(`/courses/${courseId}/assignments`)
-  const customColumns = (await canvasApi.get(`/courses/${courseId}/custom_gradebook_columns`))
-    .sort((c1, c2) => c1.position - c2.position) // Sort by "position" in "ascending" order:
+  const sectionsCache = {}
+  const customColumnsCache = {}
+  let assignments
+  let customColumns
+  let canvasUsers
+  let fakeStudents
 
-  const canvasUsers = await canvasApi.get(`courses/${courseId}/users?enrollment_type[]=student&per_page=100`)
-  const fakeStudents = await canvasApi.get(`courses/${courseId}/users?enrollment_type[]=student_view`)
-  const isReal = (student) => !fakeStudents.find(fake => fake.id === student.id)
-
-  // Sections temporal cache
-  let sectionsCache = {}
   async function getSection (sectionId) {
     if (!sectionsCache[sectionId]) {
       sectionsCache[sectionId] = await canvasApi.requestUrl(`sections/${sectionId}`)
@@ -46,26 +46,32 @@ module.exports = async function createResultsFile (courseId, courseRound, option
     return sectionsCache[sectionId]
   }
 
-  // Custom Columns Data temporal cache
-  let customColumnsCache = {}
-  async function getCustomColumnsData (userId) {
+  function getCustomColumnsData (userId) {
     return customColumnsCache[userId] || []
   }
 
-  // "Fill" the data of the cache grouped by users
-  for (let student of canvasUsers) {
-    customColumnsCache[student.id] = []
-  }
-
-  for (let column of customColumns) {
-    const data = await canvasApi.get(`/courses/${courseId}/custom_gradebook_columns/${column.id}/data`)
-    for (let d of data) {
-      customColumnsCache[d.user_id].push(d.content)
-    }
-  }
+  const isReal = (student) => !(fakeStudents).find(fake => fake.id === student.id)
 
   return {
-    async getHeaders () {
+    async preload () {
+      assignments = await canvasApi.get(`/courses/${courseId}/assignments`)
+      canvasUsers = (await canvasApi.get(`courses/${courseId}/users?enrollment_type[]=student&per_page=100`))
+        .forEach(student => {customColumnsCache[student.id] = []})
+
+      fakeStudents = await canvasApi.get(`courses/${courseId}/users?enrollment_type[]=student_view`)
+
+      customColumns = (await canvasApi.get(`/courses/${courseId}/custom_gradebook_columns`))
+        .sort((c1, c2) => c1.position - c2.position) // Sort by "position" in "ascending" order
+
+      for (let column of customColumns) {
+        const data = await canvasApi.get(`/courses/${courseId}/custom_gradebook_columns/${column.id}/data`)
+        for (let d of data) {
+          customColumnsCache[d.user_id].push(d.content)
+        }
+      }
+    },
+
+    getHeaders () {
       const fixedHeaders = [
         'SIS User ID',
         'ID',
@@ -81,6 +87,7 @@ module.exports = async function createResultsFile (courseId, courseRound, option
           `${a.name} (${a.id}) - submission date`,
           `${a.name} (${a.id}) - grade`
         ])
+        .reduce(flattenReducer)
 
       const customColumnsHeaders = customColumns
         .map(column => column.title)
@@ -88,11 +95,11 @@ module.exports = async function createResultsFile (courseId, courseRound, option
       return [
         ...fixedHeaders,
         ...customColumnsHeaders,
-        ...flatten(assignmentsHeaders) // TODO: Replace with array.prototype.flatten() when Node 10!!
+        ...assignmentsHeaders
       ]
     },
 
-    async readLine (callback) {
+    async iterateLines (callback) {
       const ldapClient = await ldap.getBoundClient({log})
 
       await canvasApi.get(`/courses/${courseId}/students/submissions?grouped=1&student_ids[]=all`, async students => {
@@ -119,14 +126,15 @@ module.exports = async function createResultsFile (courseId, courseRound, option
                 submission.submitted_at,
                 submission.entered_grade
               ])
+              .reduce(flattenReducer)
 
             const customColumnsData = await getCustomColumnsData(student.user_id)
 
-            return [
+            callback([
               ...fixedData,
               ...customColumnsData,
-              ...flatten(assignmentsData) // TODO: Replace with array.prototype.flatten() when Node 10!!
-            ]
+              ...assignmentsData // TODO: Replace with array.prototype.flatten() when Node 10!!
+            ])
           } catch (e) {
             log.error('Error. Export failed', e)
           }
