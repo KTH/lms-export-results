@@ -7,7 +7,6 @@
   "scripts": {
     "test": "tape \"test/specs/*.test.js\" | tap-spec",
     "test:integration": "tape \"test/integration/*.test.js\" | tap-spec",
-    "test:watch": "node test/specs/resultsFile.test.js | tap-spec",
     "start": "NODE_ENV=production node app.js",
     "start-dev": "nodemon app.js",
     "install-and-test": "npm install && npm test --verbose"
@@ -42,7 +41,6 @@
     "proxyquire": "^2.1.0",
     "randomstring": "^1.1.5",
     "rewire": "^4.0.1",
-    "rewire-global": "^1.0.11",
     "rimraf": "^2.6.2",
     "rimraf-promise": "^2.0.0",
     "selenium-webdriver": "^4.0.0-alpha.1",

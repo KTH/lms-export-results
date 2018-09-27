@@ -1,9 +1,7 @@
 const test = require('tape')
 const sinon = require('sinon')
-require('rewire-global').enable()
-const assert = require('assert')
-const _export = require('../../server/export')
-require('should')
+const rewire = require('rewire')
+const _export = rewire('../../server/export')
 
 const getCustomColumnsFn = _export.__get__('getCustomColumnsFn')
 
@@ -78,7 +76,7 @@ test(`should sort the custom column headers by position`, t => {
     }]
   const getCustomColumnHeaders = _export.__get__('getCustomColumnHeaders')
   const result = getCustomColumnHeaders(customColumns)
-  result.should.deepEqual(['Anteckningar', 'Anteckningar 2'])
+  t.deepEqual(result, ['Anteckningar', 'Anteckningar 2'])
   t.end()
 })
 
@@ -102,7 +100,7 @@ test(`should return an array with the custom columns data,
     }]
   const createCustomColumnsContent = _export.__get__('createCustomColumnsContent')
   const result = createCustomColumnsContent({customColumns, customColumnsData})
-  result.should.deepEqual(['en anteckning...', ''])
+  t.deepEqual(result, ['en anteckning...', ''])
   t.end()
 })
 

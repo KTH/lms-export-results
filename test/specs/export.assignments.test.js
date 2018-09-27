@@ -1,11 +1,7 @@
 const test = require('tape')
 const sinon = require('sinon')
-const assert = require('assert')
-require('rewire-global').enable()
-require('should')
-
-const _export = require('../../server/export')
-
+const rewire = require('rewire')
+const _export = rewire('../../server/export')
 const getAssignmentIdsAndHeaders = _export.__get__('getAssignmentIdsAndHeaders')
 const createSubmissionLineContent = _export.__get__('createSubmissionLineContent')
 
