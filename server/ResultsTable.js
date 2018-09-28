@@ -56,7 +56,6 @@ module.exports.create = async function createResultsFile (courseId, options) {
     async preload () {
       assignments = await canvasApi.get(`courses/${courseId}/assignments`)
       canvasUsers = (await canvasApi.get(`courses/${courseId}/users?enrollment_type[]=student&per_page=100`))
-        .forEach(student => {customColumnsCache[student.id] = []})
 
       fakeStudents = await canvasApi.get(`courses/${courseId}/users?enrollment_type[]=student_view`)
 
@@ -66,6 +65,9 @@ module.exports.create = async function createResultsFile (courseId, options) {
       for (let column of customColumns) {
         const data = await canvasApi.get(`courses/${courseId}/custom_gradebook_columns/${column.id}/data`)
         for (let d of data) {
+          if (!customColumnsCache[d.user_id]) {
+            customColumnsCache[d.user_id] = []
+          }
           customColumnsCache[d.user_id].push(d.content)
         }
       }
