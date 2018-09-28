@@ -52,6 +52,15 @@ module.exports.create = async function createResultsFile (courseId, options) {
 
   const isReal = (student) => !(fakeStudents).find(fake => fake.id === student.id)
 
+  function sortSubmissions (submissions) {
+    const result = []
+    for (assignment of assignments) {
+      const submission = submissions.find(s => s.assignment_id === assignment.id)
+      result.push(submission)
+    }
+    return result
+  }
+
   return {
     async preload () {
       assignments = await canvasApi.get(`courses/${courseId}/assignments`)
@@ -111,22 +120,22 @@ module.exports.create = async function createResultsFile (courseId, options) {
           try {
             const section = await getSection(student.section_id)
             const canvasUser = canvasUsers.find(cu => cu.id === student.user_id)
-            const ldapUser = await ldap.lookupUser(ldapClient, student.sis_user_id)
+            const ldapUser = (await ldap.lookupUser(ldapClient, student.sis_user_id)) || {}
 
             const fixedData = [
-              student.sis_user_id,
-              student.user_id,
-              section.name,
-              ldapUser.givenName || (canvasUser && canvasUser.name),
-              ldapUser.sn,
+              student.sis_user_id || '',
+              student.user_id || '',
+              section.name || '',
+              ldapUser.givenName || (canvasUser && canvasUser.name) || '',
+              ldapUser.sn || '',
               `="${ldapUser.personnummer || ''}"`,
               (canvasUser && canvasUser.login_id) || "Not displaying email for users that hasn't accepted invitation to course"
             ]
 
-            const assignmentsData = student.submissions
+            const assignmentsData = sortSubmissions(student.submissions)
               .map(submission => [
-                submission.submitted_at,
-                submission.entered_grade
+                (submission && submission.submitted_at) || '',
+                (submission && submission.entered_grade) || ''
               ])
               .reduce(flattenReducer, [])
 
