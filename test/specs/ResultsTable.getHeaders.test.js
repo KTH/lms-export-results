@@ -1,19 +1,19 @@
 const test = require('tape')
 const rewire = require('rewire')
-const ResultsFile = rewire('../../server/resultsFile')
+const ResultsTable = rewire('../../server/ResultsTable')
 const log = require('bunyan').createLogger({
   name: 'test',
   level: 0 // Creates a very noisy logger
 })
 
-ResultsFile.__set__('rp', () => ({
+ResultsTable.__set__('rp', () => ({
   auth: {
     access_token: 'valid_access_token'
   }
 }))
 
 test('"getHeaders()" should not work if "preload()" is not called before', async t => {
-  const file = await ResultsFile.create('canvas_course_id', {log, oauth: {}})
+  const file = await ResultsTable.create('canvas_course_id', {log, oauth: {}})
 
   try {
     file.getHeaders()
@@ -24,13 +24,13 @@ test('"getHeaders()" should not work if "preload()" is not called before', async
 })
 
 test('"getHeaders()" should return 7 fixed headers when preload()-ed data is empty', async t => {
-  ResultsFile.__set__('CanvasApi', class FakeCanvasApi {
+  ResultsTable.__set__('CanvasApi', class FakeCanvasApi {
     get (url) {
       return []
     }
   })
 
-  const file = await ResultsFile.create('canvas_course_id', {log, oauth: {}})
+  const file = await ResultsTable.create('canvas_course_id', {log, oauth: {}})
 
   await file.preload()
   const expectedHeaders = [
@@ -61,8 +61,8 @@ test('"getHeaders()" should return 9 headers when data is one assignment (7 fixe
     }
   }
 
-  ResultsFile.__set__('CanvasApi', FakeCanvasApi)
-  const file = await ResultsFile.create('canvas_course_id', {log, oauth: {}})
+  ResultsTable.__set__('CanvasApi', FakeCanvasApi)
+  const file = await ResultsTable.create('canvas_course_id', {log, oauth: {}})
 
   await file.preload()
 
@@ -98,8 +98,8 @@ test('"getHeaders()" returns 15 headers when data are four assignment (7 fixed +
     }
   }
 
-  ResultsFile.__set__('CanvasApi', FakeCanvasApi)
-  const file = await ResultsFile.create('canvas_course_id', {log, oauth: {}})
+  ResultsTable.__set__('CanvasApi', FakeCanvasApi)
+  const file = await ResultsTable.create('canvas_course_id', {log, oauth: {}})
 
   await file.preload()
 
@@ -141,8 +141,8 @@ test('"getHeaders() returns 10 headers when data are 1 assignment + 1 custom col
     }
   }
 
-  ResultsFile.__set__('CanvasApi', FakeCanvasApi)
-  const file = await ResultsFile.create('canvas_course_id', {log, oauth: {}})
+  ResultsTable.__set__('CanvasApi', FakeCanvasApi)
+  const file = await ResultsTable.create('canvas_course_id', {log, oauth: {}})
 
   await file.preload()
 
@@ -168,8 +168,8 @@ test('"getHeaders() returns custom columns sorted by "position" in Canvas', asyn
     }
   }
 
-  ResultsFile.__set__('CanvasApi', FakeCanvasApi)
-  const file = await ResultsFile.create('canvas_course_id', {log, oauth: {}})
+  ResultsTable.__set__('CanvasApi', FakeCanvasApi)
+  const file = await ResultsTable.create('canvas_course_id', {log, oauth: {}})
 
   await file.preload()
 

@@ -1,12 +1,12 @@
 const test = require('tape')
 const rewire = require('rewire')
-const ResultsFile = rewire('../../server/resultsFile')
+const ResultsTable = rewire('../../server/ResultsTable')
 const log = require('bunyan').createLogger({
   name: 'test',
   level: 0 // Creates a very noisy logger
 })
 
-ResultsFile.__set__('rp', () => ({
+ResultsTable.__set__('rp', () => ({
   auth: {
     access_token: 'valid_access_token'
   }
@@ -23,12 +23,12 @@ test('"iterateLines()" with 0 students should finish without calling the callbac
     }
   }
 
-  ResultsFile.__set__('ldap.getBoundClient', () => fakeLdapClient)
-  ResultsFile.__set__('CanvasApi', FakeCanvasApi)
+  ResultsTable.__set__('ldap.getBoundClient', () => fakeLdapClient)
+  ResultsTable.__set__('CanvasApi', FakeCanvasApi)
 
-  const file = await ResultsFile.create('canvas_course_id', {log, oauth: {}})
+  const file = await ResultsTable.create('canvas_course_id', {log, oauth: {}})
 
-  await file.iterateLines(() => {
+  await file.iterateRows(() => {
     t.fail('the callback was called')
   })
 
@@ -56,13 +56,13 @@ test('"iterateLines()" with 1 student should throw an error if preload() was not
     }
   }
 
-  ResultsFile.__set__('ldap.getBoundClient', () => fakeLdapClient)
-  ResultsFile.__set__('CanvasApi', FakeCanvasApi)
+  ResultsTable.__set__('ldap.getBoundClient', () => fakeLdapClient)
+  ResultsTable.__set__('CanvasApi', FakeCanvasApi)
 
-  const file = await ResultsFile.create('canvas_course_id', {log, oauth: {}})
+  const file = await ResultsTable.create('canvas_course_id', {log, oauth: {}})
 
   try {
-    await file.iterateLines(() => {
+    await file.iterateRows(() => {
       t.fail('the callback was called')
     })
   } catch (e) {

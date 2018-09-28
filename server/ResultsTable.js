@@ -99,7 +99,7 @@ module.exports.create = async function createResultsFile (courseId, options) {
       ]
     },
 
-    async iterateLines (callback) {
+    async iterateRows (callback) {
       const ldapClient = await ldap.getBoundClient({log})
 
       await canvasApi.get(`/courses/${courseId}/students/submissions?grouped=1&student_ids[]=all`, async students => {
