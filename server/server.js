@@ -48,7 +48,7 @@ const systemroutes = require('./systemroutes')
 const exportroutes = require('./exportroutes')
 
 server.use(prefix, systemroutes)
-server.use(prefix, exportroutes)
+server.use(prefix + '/v2', exportroutes)
 
 server.get(prefix, (req, res) => res.redirect(`${config.proxyPrefixPath.uri}/_about`))
 
