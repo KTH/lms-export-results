@@ -1,8 +1,7 @@
 const test = require('tape')
 const rewire = require('rewire')
 const sinon = require('sinon')
-require('rewire-global').enable()
-const proxyquire = require('proxyquire')
+const _export = rewire('../../server/export')
 
 class CanvasApi {
   get (url) {
@@ -11,16 +10,16 @@ class CanvasApi {
   }
 }
 
-const _export = proxyquire('../../server/export', {
-  'kth-canvas-api': CanvasApi,
-  './ldap': {
-    getBoundClient () {
+_export.__set__('CanvasApi', CanvasApi)
+_export.__set__('ldap', {
+  getBoundClient () {
     console.log('mocking ldap client')
     return {
       unbind(){}
     }
-  }}
+  }
 })
+
 const exportResults = _export.__get__('exportResults')
 const exportResults3 = _export.__get__('exportResults3')
 
