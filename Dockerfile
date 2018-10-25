@@ -1,4 +1,4 @@
-FROM node:8.12
+FROM kthse/kth-nodejs:9.11.0
 
 # We do this to avoid npm install when we're only changing code
 COPY ["config", "config"]
