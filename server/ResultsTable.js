@@ -54,7 +54,7 @@ module.exports.create = async function createResultsFile (courseId, options) {
 
   function sortSubmissions (submissions) {
     const result = []
-    for (assignment of assignments) {
+    for (let assignment of assignments) {
       const submission = submissions.find(s => s.assignment_id === assignment.id)
       result.push(submission)
     }
