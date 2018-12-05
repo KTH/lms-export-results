@@ -30,6 +30,7 @@ function exportResults (req, res) {
       scope: [
         'url:GET|/api/v1/courses/:course_id/assignments',
         'url:GET|/api/v1/courses/:course_id/custom_gradebook_columns',
+        'url:GET|/api/v1/courses/:course_id/custom_gradebook_columns/:id/data',
         'url:GET|/api/v1/courses/:course_id/users',
         'url:GET|/api/v1/courses/:course_id/students/submissions',
         'url:GET|/api/v1/sections/:id'
@@ -244,7 +245,7 @@ async function exportResults3 (req, res) {
         </ul>
       </div>
     `)
-      // return to prevent the rest of this function to run
+    // return to prevent the rest of this function to run
     return
   }
 
