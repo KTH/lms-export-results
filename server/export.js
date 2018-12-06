@@ -53,7 +53,7 @@ async function getAccessToken ({clientId, clientSecret, redirectUri, code}) {
       client_id: clientId,
       client_secret: clientSecret,
       redirect_uri: redirectUri,
-      code
+      code: code
     },
     json: true
   })
@@ -215,6 +215,15 @@ function getCustomColumnHeaders (customColumns) {
   return _.orderBy(customColumns, ['position'], ['asc']).map(c => c.title)
 }
 
+function findDuplicates (data) {
+  return data.reduce((accumulator, value, index, array) => {
+    if (array.indexOf(value) !== index && accumulator.indexOf(value) < 0) {
+      accumulator.push(value)
+    }
+    return accumulator
+  }, [])
+}
+
 async function exportResults3 (req, res) {
   const correlationId = req.query.correlationId || req.id
   const fetchedSections = {}
@@ -226,6 +235,7 @@ async function exportResults3 (req, res) {
   log.info(`Should export for ${courseRound} / ${canvasCourseId}`)
 
   let accessToken
+  let aggregatedData = []
 
   try {
     accessToken = await getAccessToken({
@@ -286,6 +296,7 @@ async function exportResults3 (req, res) {
       )))
     ]
     res.write(csv.createLine(csvHeader))
+
     const usersInCourse = await canvasApi.get(`courses/${canvasCourseId}/users?enrollment_type[]=student&per_page=100`)
     const isFake = await curriedIsFake({canvasApi, canvasApiUrl, canvasCourseId})
     await canvasApi.get(`courses/${canvasCourseId}/students/submissions?grouped=1&student_ids[]=all`, async students => {
@@ -310,8 +321,9 @@ async function exportResults3 (req, res) {
           }, {
             log
           })
-
-          res.write(csv.createLine(csvLine))
+          const csvString = csv.createLine(csvLine)
+          aggregatedData.push(csvString)
+          res.write(csvString)
         } catch (e) {
           log.error(`Export failed: `, e)
           // Instead of writing a status:500, write an error in the file. Otherwise the browser will think that the download is finished.
@@ -325,8 +337,10 @@ async function exportResults3 (req, res) {
     // Instead of writing a status:500, write an error in the file. Otherwise the browser will think that the download is finished.
     res.write('An error occured when exporting. Something is probably missing in this file.')
   }
+
   log.info('Finish the response and close ldap client.')
   res.send()
+  log.info(`Number if duplicated found for round ${courseRound} of course ${canvasCourseId}: ${findDuplicates(aggregatedData).length}`)
 }
 
 module.exports = {
