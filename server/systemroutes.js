@@ -1,5 +1,4 @@
 const express = require('express')
-const stripIndent = require('common-tags/lib/stripIndent')
 const packageFile = require('../package.json')
 const defaultLog = require('./log')
 const ldap = require('./ldap')
