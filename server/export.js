@@ -338,7 +338,8 @@ async function exportResults3 (req, res) {
     res.write('An error occured when exporting. Something is probably missing in this file.')
   }
   if(findDuplicates(aggregatedData).length ){
-    res.write('"An error occured and some users are probably missing from this file. We are really sorry for this, and are currently working on solving the cause of the error. Please try again."') 
+    res.write('"⚠ An error occured and some users are probably missing from this file. We are really sorry for this, and are currently working on solving the cause of the error. Please try again, it should work if you try a second time."')
+      log.warn('Sent an error message to the user.')
   }
   log.info('Finish the response and close ldap client.')
   res.send()
