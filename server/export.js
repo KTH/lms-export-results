@@ -337,10 +337,12 @@ async function exportResults3 (req, res) {
     // Instead of writing a status:500, write an error in the file. Otherwise the browser will think that the download is finished.
     res.write('An error occured when exporting. Something is probably missing in this file.')
   }
-
+  if(findDuplicates(aggregatedData).length ){
+    res.write('"An error occured and some users are probably missing from this file. We are really sorry for this, and are currently working on solving the cause of the error. Please try again."') 
+  }
   log.info('Finish the response and close ldap client.')
   res.send()
-  log.info(`Number if duplicated found for round ${courseRound} of course ${canvasCourseId}: ${findDuplicates(aggregatedData).length}`)
+  log.info(`Number of duplicated found for round ${courseRound} of course ${canvasCourseId}: ${findDuplicates(aggregatedData).length}`)
 }
 
 module.exports = {
