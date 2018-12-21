@@ -60,11 +60,11 @@ async function _monitor (req, res) {
   ])
 
   res.setHeader('Content-Type', 'text/plain')
-  res.send(stripIndent`
-    APPLICATION_STATUS: ${checks.every((e) => e) ? 'OK' : 'ERROR'}
+  res.send(`
+APPLICATION_STATUS: ${checks.every((e) => e) ? 'OK' : 'ERROR'}
 
-    LDAP: ${checks[0].ok ? 'OK' : 'ERROR'} ${checks[0].msg}
-    IP: ${checks[1].ok ? 'OK' : 'ERROR'} ${checks[1].msg}
+LDAP: ${checks[0].ok ? 'OK' : 'ERROR'} ${checks[0].msg}
+IP: ${checks[1].ok ? 'OK' : 'ERROR'} ${checks[1].msg}
   `)
 }
 
