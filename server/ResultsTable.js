@@ -152,7 +152,12 @@ module.exports.create = async function createResultsFile (courseId, options) {
         }
       })
 
-      await ldapClient.unbind()
+      await ldapClient.unbind((err) => {
+        if (err) {
+          log.error('An error occured when unbinding ldap client')
+          log.error(err)
+        }
+      })
     }
   }
 }
