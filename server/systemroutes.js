@@ -8,8 +8,9 @@ const version = require('../config/version')
 const router = express.Router()
 
 async function checkLdap ({log}) {
+  let ldapClient
   try {
-    const ldapClient = await ldap.getBoundClient({log})
+    ldapClient = await ldap.getBoundClient({log})
     const testUser = await ldap.lookupUser(ldapClient, 'u1famwov', {log})
 
     if (testUser.sn) {
@@ -20,6 +21,15 @@ async function checkLdap ({log}) {
   } catch (e) {
     log.error('LDAP check failed', e)
     return {ok: false, msg: 'failed to lookup u1famwov in ldap'}
+  } finally {
+    if (ldapClient) {
+      await ldapClient.unbind((err) => {
+        if (err) {
+          log.error('An error occured when unbinding ldap client')
+          log.error(err)
+        }
+      })
+    }
   }
 }
 
