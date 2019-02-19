@@ -78,11 +78,12 @@ async function createFixedColumnsContent ({student, ldapClient, section, canvasU
   let row
   try {
     const ugUser = await ldap.lookupUser(ldapClient, student.sis_user_id)
+    const personnummer = ugUser.norEduPersonNIN
     row = {
       kthid: student.sis_user_id,
       givenName: ugUser.givenName,
       surname: ugUser.sn,
-      personnummer: ugUser.norEduPersonNIN
+      personnummer: personnummer && (personnummer.length === 12 ? personnummer.slice(2) : personnummer)
     }
   } catch (err) {
     log.error('An error occured while trying to find user in ldap:', err)
