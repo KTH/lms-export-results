@@ -55,7 +55,7 @@ async function setupCourse(){
 }
 
 test(`should write a file
-    with personnummer and name for the student
+    with Ladok UID and name for the student
     if there's one assignment with one submission in the course`, async t => {
   const course = await setupCourse()
   await driver.get('https://kth.test.instructure.com/login/canvas')

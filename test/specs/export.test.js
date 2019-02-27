@@ -65,11 +65,11 @@ test(`should write a file
   })
   await exportResults3(req, res)
   sinon.assert.calledWith(res.write, '\uFEFF')
-  sinon.assert.calledWith(res.write, sinon.match('SIS User ID;ID;Section;Name;Surname;Personnummer'))
+  sinon.assert.calledWith(res.write, sinon.match('SIS User ID;ID;Section;Name;Surname;Ladok UID'))
   t.end()
 })
 
 test.skip(`should write a file
-    with personnummer and name for the student
+    with Ladok UID and name for the student
     if there's one assignment with one submission in the course`, async t => {
 })

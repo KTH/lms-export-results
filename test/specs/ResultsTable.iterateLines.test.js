@@ -84,7 +84,7 @@ test('"iterateLines()" should work normally', async t => {
         return {
           givenName: 'John',
           sn: 'Doe',
-          personnummer: '111122334455'
+          ladokUID: '111122334455'
         }
       }
     }
@@ -227,13 +227,13 @@ test('returned assignments should be in the right order', async t => {
         return {
           givenName: 'John',
           sn: 'Doe',
-          personnummer: '111122334455'
+          ladokUID: '111122334455'
         }
       } else {
         return {
           givenName: 'Anna',
           sn: 'Doa',
-          personnummer: '999988776655'
+          ladokUID: '999988776655'
         }
       }
     }

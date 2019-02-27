@@ -39,7 +39,7 @@ test('"getHeaders()" should return 7 fixed headers when preload()-ed data is emp
     'Section',
     'Name',
     'Surname',
-    'Personnummer',
+    'Ladok UID',
     'Email address'
   ]
 

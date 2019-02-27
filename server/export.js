@@ -78,12 +78,13 @@ async function createFixedColumnsContent ({student, ldapClient, section, canvasU
   let row
   try {
     const ugUser = await ldap.lookupUser(ldapClient, student.sis_user_id)
-    const personnummer = ugUser.norEduPersonNIN
+    const ladokUID = ugUser.ugLadok3StudentUid
+    log.info(`HELLO NBR: ${ladokUID}`)
     row = {
       kthid: student.sis_user_id,
       givenName: ugUser.givenName,
       surname: ugUser.sn,
-      personnummer: personnummer && (personnummer.length === 12 ? personnummer.slice(2) : personnummer)
+      ladokUID: ladokUID
     }
   } catch (err) {
     log.error('An error occured while trying to find user in ldap:', err)
@@ -97,7 +98,7 @@ async function createFixedColumnsContent ({student, ldapClient, section, canvasU
     section.name || '',
     row.givenName || (canvasUser && canvasUser.name) || '', // Prefer name from ldap, but if it doesn't exist, use the name in Canvas.
     row.surname || '',
-    `="${row.personnummer || ''}"`,
+    `="${row.ladokUID || ''}"`,
     (canvasUser && canvasUser.login_id) || "Not displaying email for users that hasn't accepted invitation to course."
   ]
 }
@@ -285,7 +286,7 @@ async function exportResults3 (req, res) {
       'Section',
       'Name',
       'Surname',
-      'Personnummer',
+      'Ladok UID',
       'Email address']
 
     // Note that the order of these columns has to match that returned from the 'createCsvLineContent' function

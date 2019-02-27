@@ -89,7 +89,7 @@ module.exports.create = async function createResultsFile (courseId, options) {
         'Section',
         'Name',
         'Surname',
-        'Personnummer',
+        'Ladok UID',
         'Email address'
       ]
 
@@ -128,7 +128,7 @@ module.exports.create = async function createResultsFile (courseId, options) {
               section.name || '',
               ldapUser.givenName || (canvasUser && canvasUser.name) || '',
               ldapUser.sn || '',
-              `="${ldapUser.personnummer || ''}"`,
+              `="${ldapUser.ladokUID || ''}"`,
               (canvasUser && canvasUser.login_id) || "Not displaying email for users that hasn't accepted invitation to course"
             ]
 
