@@ -300,6 +300,7 @@ async function exportResults3 (req, res) {
 
     const usersInCourse = await canvasApi.get(`courses/${canvasCourseId}/users?enrollment_type[]=student&per_page=100`)
     const isFake = await curriedIsFake({canvasApi, canvasApiUrl, canvasCourseId})
+      // TODO: CAN we build this call ourselves instead?
     await canvasApi.get(`courses/${canvasCourseId}/students/submissions?grouped=1&student_ids[]=all`, async students => {
       for (let student of students) {
         try {
