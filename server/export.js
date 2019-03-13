@@ -1,6 +1,7 @@
 'use strict'
 const defaultLog = require('./log')
 const querystring = require('querystring')
+const getSubmissions = require('./getSubmissions')
 const rp = require('request-promise')
 const settings = require('../config/serverSettings')
 const CanvasApi = require('kth-canvas-api')
@@ -300,8 +301,11 @@ async function exportResults3 (req, res) {
 
     const usersInCourse = await canvasApi.get(`courses/${canvasCourseId}/users?enrollment_type[]=student&per_page=100`)
     const isFake = await curriedIsFake({canvasApi, canvasApiUrl, canvasCourseId})
-      // TODO: CAN we build this call ourselves instead?
+
+    const submissions = await getSubmissions(canvasCourseId)
+
     await canvasApi.get(`courses/${canvasCourseId}/students/submissions?grouped=1&student_ids[]=all`, async students => {
+
       for (let student of students) {
         try {
           if (isFake(student)) {

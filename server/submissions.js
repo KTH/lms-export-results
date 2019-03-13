@@ -16,7 +16,7 @@ test('should construct the similar json', async t =>{
     const oldWay= (await canvasApi.get(`courses/3719/students/submissions?grouped=1&student_ids[]=all&per_page=100`)).sort((a,b)=> a.user_id - b.user_id).filter(stud => stud.user_id !== 55842)
     
     // Make sure both arrays are sorted, so I can compare them
-    const newWay = (await getSubmissions(3719)).sort((a,b)=> a.user_id - b.user_id)
+    const {newWay:students} = (await getStudentsAndSections(3719)).sort((a,b)=> a.user_id - b.user_id)
 
     // Ignore seconds late when comparing, since these are changed for every api call
     oldWay.forEach(student => student.submissions.forEach(sub => delete sub.seconds_late))
@@ -27,7 +27,7 @@ test('should construct the similar json', async t =>{
     t.end()
 })
 
-async function getSubmissions(courseId) {
+async function getStudentsAndSections(courseId) {
 
     const sections = await canvasApi.get(`courses/${courseId}/sections?include[]=students`)
 
@@ -42,8 +42,8 @@ async function getSubmissions(courseId) {
     // Flatten the students array
     const students = [].concat(...studentsPerSection)
     const submissions = await canvasApi.get(`courses/${courseId}/students/submissions?student_ids[]=all&per_page=100`)
-    const result = students.map( student => ({...student, submissions:submissions.filter(sub => sub.user_id === student.user_id)}) )
+    const studentsWithSubmissions= students.map( student => ({...student, submissions:submissions.filter(sub => sub.user_id === student.user_id)}) )
     
-    return result 
+    return {sections,students: studentsWithSubmissions} 
 }
-module.exports = getSubmissions
+module.exports = getStudentsAndSections
