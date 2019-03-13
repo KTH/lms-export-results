@@ -1,7 +1,7 @@
 'use strict'
 const defaultLog = require('./log')
 const querystring = require('querystring')
-const getSubmissions = require('./getSubmissions')
+const {getStudentsAndSections}= require('./submissions')
 const rp = require('request-promise')
 const settings = require('../config/serverSettings')
 const CanvasApi = require('kth-canvas-api')
@@ -302,17 +302,14 @@ async function exportResults3 (req, res) {
     const usersInCourse = await canvasApi.get(`courses/${canvasCourseId}/users?enrollment_type[]=student&per_page=100`)
     const isFake = await curriedIsFake({canvasApi, canvasApiUrl, canvasCourseId})
 
-    const submissions = await getSubmissions(canvasCourseId)
+    const {sections, students} = await getStudentsAndSections(canvasCourseId)
 
-    await canvasApi.get(`courses/${canvasCourseId}/students/submissions?grouped=1&student_ids[]=all`, async students => {
 
+    //await canvasApi.get(`courses/${canvasCourseId}/students/submissions?grouped=1&student_ids[]=all`, async students => {
+       
       for (let student of students) {
         try {
-          if (isFake(student)) {
-            continue
-          }
-          const section = fetchedSections[student.section_id] || await canvasApi.requestUrl(`sections/${student.section_id}`)
-          fetchedSections[student.section_id] = section
+          const section = sections.find(section => section.id === student.section_id)
 
           const canvasUser = usersInCourse.find(u => u.id === student.user_id)
           const customColumnsData = getCustomColumnsData(student.user_id)
@@ -336,7 +333,7 @@ async function exportResults3 (req, res) {
           res.write('An error occured when exporting a student. Something is probably missing in this file.')
         }
       }
-    })
+
     await ldapClient.unbind((err) => {
       if (err) {
         log.error('An error occured when unbinding ldap client')
