@@ -4,8 +4,7 @@ require('dotenv').config()
 
 const canvasApi = new CanvasApi(process.env.CANVAS_HOST, process.env.CANVAS_TOKEN)
 
-async function getStudentsAndSections (courseId) {
-  const sections = await canvasApi.get(`courses/${courseId}/sections?include[]=students`)
+async function getSubmissions (courseId, sections) {
 
   const studentsPerSection = sections.map(section => section.students.map(student => ({
     user_id: student.id,
@@ -22,4 +21,4 @@ async function getStudentsAndSections (courseId) {
 
   return {sections, students: studentsWithSubmissions}
 }
-module.exports = {getStudentsAndSections}
+module.exports = {getSubmissions}

@@ -293,7 +293,8 @@ async function exportResults3 (req, res) {
 
     const usersInCourse = await canvasApi.get(`courses/${canvasCourseId}/users?enrollment_type[]=student&per_page=100`)
 
-    const {sections, students} = await getStudentsAndSections(canvasCourseId)
+    const sections = await canvasApi.get(`courses/${canvasCourseId}/sections?include[]=students`)
+    const students = await getSubmissions(canvasCourseId, sections)
 
     for (let student of students) {
       try {
