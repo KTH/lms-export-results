@@ -6,7 +6,7 @@ require('dotenv').config()
 const canvasApi = new CanvasApi(process.env.CANVAS_HOST, process.env.CANVAS_TOKEN)
 const {getSubmissions} = require('../../../../server/submissions')
 
-
+// TODO: this isn't really a good integration test, I just used it during the development. I guess we should remove it.
 test('should construct the similar json', async t => {
     const sections = await canvasApi.get(`courses/3719/sections?include[]=students`)
 
