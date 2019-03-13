@@ -1,7 +1,7 @@
 'use strict'
 const defaultLog = require('./log')
 const querystring = require('querystring')
-const {getStudentsAndSections}= require('./submissions')
+const {getStudentsAndSections} = require('./submissions')
 const rp = require('request-promise')
 const settings = require('../config/serverSettings')
 const CanvasApi = require('kth-canvas-api')
@@ -188,13 +188,6 @@ function exportDone (req, res) {
   <div aria-live="polite" role="alert" class="alert alert-success">Done. The file should now be downloaded to your computer.</div>`)
 }
 
-async function curriedIsFake ({canvasApi, canvasApiUrl, canvasCourseId}) {
-  const fakeUsers = await canvasApi.get(`/courses/${canvasCourseId}/users?enrollment_type[]=student_view`)
-  return function (student) {
-    return fakeUsers.find(user => user.id === student.user_id)
-  }
-}
-
 async function getCustomColumnsFn ({canvasApi, canvasCourseId, canvasApiUrl}) {
   const customColumnsData = {}
   const customColumns = await canvasApi.get(`/courses/${canvasCourseId}/custom_gradebook_columns`)
@@ -228,7 +221,6 @@ function findDuplicates (data) {
 
 async function exportResults3 (req, res) {
   const correlationId = req.query.correlationId || req.id
-  const fetchedSections = {}
   const courseRound = req.query.courseRound
   const fileName = `${courseRound || 'canvas'}-${moment().format('YYYYMMDD-HHMMSS')}-results.csv`
   const log = (req.log || defaultLog).child({fileName, correlation_id: correlationId})
@@ -300,39 +292,37 @@ async function exportResults3 (req, res) {
     res.write(csv.createLine(csvHeader))
 
     const usersInCourse = await canvasApi.get(`courses/${canvasCourseId}/users?enrollment_type[]=student&per_page=100`)
-    const isFake = await curriedIsFake({canvasApi, canvasApiUrl, canvasCourseId})
 
     const {sections, students} = await getStudentsAndSections(canvasCourseId)
 
+    // await canvasApi.get(`courses/${canvasCourseId}/students/submissions?grouped=1&student_ids[]=all`, async students => {
 
-    //await canvasApi.get(`courses/${canvasCourseId}/students/submissions?grouped=1&student_ids[]=all`, async students => {
-       
-      for (let student of students) {
-        try {
-          const section = sections.find(section => section.id === student.section_id)
+    for (let student of students) {
+      try {
+        const section = sections.find(section => section.id === student.section_id)
 
-          const canvasUser = usersInCourse.find(u => u.id === student.user_id)
-          const customColumnsData = getCustomColumnsData(student.user_id)
-          const csvLine = await createCsvLineContent({
-            student,
-            ldapClient,
-            assignmentIds,
-            section,
-            canvasUser,
-            customColumns,
-            customColumnsData
-          }, {
-            log
-          })
-          const csvString = csv.createLine(csvLine)
-          aggregatedData.push(csvString)
-          res.write(csvString)
-        } catch (e) {
-          log.error(`Export failed: `, e)
-          // Instead of writing a status:500, write an error in the file. Otherwise the browser will think that the download is finished.
-          res.write('An error occured when exporting a student. Something is probably missing in this file.')
-        }
+        const canvasUser = usersInCourse.find(u => u.id === student.user_id)
+        const customColumnsData = getCustomColumnsData(student.user_id)
+        const csvLine = await createCsvLineContent({
+          student,
+          ldapClient,
+          assignmentIds,
+          section,
+          canvasUser,
+          customColumns,
+          customColumnsData
+        }, {
+          log
+        })
+        const csvString = csv.createLine(csvLine)
+        aggregatedData.push(csvString)
+        res.write(csvString)
+      } catch (e) {
+        log.error(`Export failed: `, e)
+        // Instead of writing a status:500, write an error in the file. Otherwise the browser will think that the download is finished.
+        res.write('An error occured when exporting a student. Something is probably missing in this file.')
       }
+    }
 
     await ldapClient.unbind((err) => {
       if (err) {
