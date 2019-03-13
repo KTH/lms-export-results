@@ -9,7 +9,6 @@ require('dotenv').config()
 
 const canvasApi = new CanvasApi(process.env.CANVAS_HOST, process.env.CANVAS_TOKEN)
 
-
 // TODO: This function should be deleted before we merge the PR. I think this test has done its good once the code is merged.
 test('should construct the similar json', async t =>{
     // Get the json, sorted, without the test user. The new function don't incluce the test users.
