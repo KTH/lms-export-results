@@ -295,8 +295,6 @@ async function exportResults3 (req, res) {
 
     const {sections, students} = await getStudentsAndSections(canvasCourseId)
 
-    // await canvasApi.get(`courses/${canvasCourseId}/students/submissions?grouped=1&student_ids[]=all`, async students => {
-
     for (let student of students) {
       try {
         const section = sections.find(section => section.id === student.section_id)
