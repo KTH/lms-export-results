@@ -31,6 +31,7 @@ test('should construct the similar json', async t =>{
     console.log('******************************')
 
 
+    assert.deepEqual(builtJson.length, groupedJson.length)
     assert.deepEqual(builtStudent, groupedStudent)
 //    assert.deepEqual(groupedJson,builtJson) 
 
