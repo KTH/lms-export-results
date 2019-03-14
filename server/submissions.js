@@ -1,8 +1,9 @@
 const CanvasApi = require('kth-canvas-api')
+const canvasApiUrl = `https://${process.env.CANVAS_HOST}/api/v1`
 
 require('dotenv').config()
 
-const canvasApi = new CanvasApi(process.env.CANVAS_HOST, process.env.CANVAS_TOKEN)
+const canvasApi = new CanvasApi(canvasApiUrl, process.env.CANVAS_TOKEN)
 
 async function getSubmissions (courseId, sections) {
 
@@ -19,6 +20,6 @@ async function getSubmissions (courseId, sections) {
   const submissions = await canvasApi.get(`courses/${courseId}/students/submissions?student_ids[]=all&per_page=100`)
   const studentsWithSubmissions = students.map(student => ({...student, submissions: submissions.filter(sub => sub.user_id === student.user_id)}))
 
-  return {sections, students: studentsWithSubmissions}
+  return studentsWithSubmissions
 }
 module.exports = {getSubmissions}

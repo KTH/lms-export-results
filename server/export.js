@@ -1,7 +1,7 @@
 'use strict'
 const defaultLog = require('./log')
 const querystring = require('querystring')
-const {getStudentsAndSections} = require('./submissions')
+const {getSubmissions} = require('./submissions')
 const rp = require('request-promise')
 const settings = require('../config/serverSettings')
 const CanvasApi = require('kth-canvas-api')

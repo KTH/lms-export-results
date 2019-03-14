@@ -13,7 +13,7 @@ test('should construct the similar json', async t => {
     // Get the json, sorted, without the test user. The new function don't incluce the test users.
     const oldWay = (await canvasApi.get(`courses/3719/students/submissions?grouped=1&student_ids[]=all&per_page=100`)).sort((a, b) => a.user_id - b.user_id).filter(stud => stud.user_id !== 55842)
 
-    const {students} = (await getSubmissions(3719, sections))
+    const students = (await getSubmissions(3719, sections))
     // Make sure both arrays are sorted, so I can compare them
     const newWay = students.sort((a, b) => a.user_id - b.user_id)
 
