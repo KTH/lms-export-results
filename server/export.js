@@ -1,6 +1,7 @@
 'use strict'
 const defaultLog = require('./log')
 const querystring = require('querystring')
+const { getSubmissions } = require('./submissions')
 const rp = require('request-promise')
 const settings = require('../config/serverSettings')
 const CanvasApi = require('kth-canvas-api')
@@ -12,7 +13,7 @@ const canvasApiUrl = `https://${settings.canvas.host}/api/v1`
 
 function exportResults (req, res) {
   const correlationId = req.id
-  const log = (req.log || defaultLog).child({correlation_id: correlationId})
+  const log = (req.log || defaultLog).child({ correlation_id: correlationId })
 
   try {
     let b = req.body
@@ -20,7 +21,7 @@ function exportResults (req, res) {
     let courseRound = b.lis_course_offering_sourcedid
     const canvasCourseId = b.custom_canvas_course_id
     const fullUrl = (settings.proxyBase || (req.protocol + '://' + req.get('host'))) + req.originalUrl
-    const nextUrl = fullUrl + '2?' + querystring.stringify({courseRound, canvasCourseId, correlationId})
+    const nextUrl = fullUrl + '2?' + querystring.stringify({ courseRound, canvasCourseId, correlationId })
     log.info('Tell auth to redirect back to', nextUrl)
     log.info('using canvas client id', settings.canvas.clientId)
     const basicUrl = `https://${settings.canvas.host}/login/oauth2/auth?` + querystring.stringify({
@@ -44,7 +45,7 @@ function exportResults (req, res) {
   }
 }
 
-async function getAccessToken ({clientId, clientSecret, redirectUri, code}) {
+async function getAccessToken ({ clientId, clientSecret, redirectUri, code }) {
   const auth = await rp({
     method: 'POST',
     uri: `https://${settings.canvas.host}/login/oauth2/token`,
@@ -60,7 +61,7 @@ async function getAccessToken ({clientId, clientSecret, redirectUri, code}) {
   return auth.access_token
 }
 
-async function getAssignmentIdsAndHeaders ({canvasApi, canvasCourseId}) {
+async function getAssignmentIdsAndHeaders ({ canvasApi, canvasCourseId }) {
   const assignmentIds = []
   const headers = {}
 
@@ -71,10 +72,10 @@ async function getAssignmentIdsAndHeaders ({canvasApi, canvasCourseId}) {
     assignmentIds.push(id)
     headers[id] = `${t.name} (${t.id})`
   }
-  return {assignmentIds, headers}
+  return { assignmentIds, headers }
 }
 
-async function createFixedColumnsContent ({student, ldapClient, section, canvasUser}, {log = defaultLog} = {}) {
+async function createFixedColumnsContent ({ student, ldapClient, section, canvasUser }, { log = defaultLog } = {}) {
   let row
   try {
     const ugUser = await ldap.lookupUser(ldapClient, student.sis_user_id)
@@ -102,12 +103,12 @@ async function createFixedColumnsContent ({student, ldapClient, section, canvasU
   ]
 }
 
-function createCustomColumnsContent ({customColumnsData, customColumns}) {
+function createCustomColumnsContent ({ customColumnsData, customColumns }) {
   const sortedCustomColumns = _.orderBy(customColumns, ['position'], ['asc'])
   return sortedCustomColumns.map(customColumn => customColumnsData[customColumn.id] || '')
 }
 
-function createSubmissionLineContent ({student, assignmentIds}) {
+function createSubmissionLineContent ({ student, assignmentIds }) {
   const row = {}
   for (let submission of student.submissions) {
     row['' + submission.assignment_id] = {
@@ -117,15 +118,15 @@ function createSubmissionLineContent ({student, assignmentIds}) {
   }
 
   return _.flatten(assignmentIds.map(id => {
-    const submission = row['' + id] || {grade: '-', submitted_at: '-'}
+    const submission = row['' + id] || { grade: '-', submitted_at: '-' }
     return [submission.submitted_at, submission.grade]
   }))
 }
 
-async function createCsvLineContent ({student, ldapClient, assignmentIds, section, canvasUser, customColumns, customColumnsData}, {log = defaultLog} = {}) {
-  const fixedColumnsContent = await createFixedColumnsContent({student, ldapClient, assignmentIds, section, canvasUser}, {log})
-  const customColumnsContent = createCustomColumnsContent({customColumnsData, customColumns})
-  const assignmentsColumnsContent = createSubmissionLineContent({student, ldapClient, assignmentIds, section, canvasUser})
+async function createCsvLineContent ({ student, ldapClient, assignmentIds, section, canvasUser, customColumns, customColumnsData }, { log = defaultLog } = {}) {
+  const fixedColumnsContent = await createFixedColumnsContent({ student, ldapClient, assignmentIds, section, canvasUser }, { log })
+  const customColumnsContent = createCustomColumnsContent({ customColumnsData, customColumns })
+  const assignmentsColumnsContent = createSubmissionLineContent({ student, ldapClient, assignmentIds, section, canvasUser })
 
   return [
     ...fixedColumnsContent,
@@ -136,7 +137,7 @@ async function createCsvLineContent ({student, ldapClient, assignmentIds, sectio
 
 function exportResults2 (req, res) {
   const correlationId = req.query.correlationId || req.id
-  const log = (req.log || defaultLog).child({correlation_id: correlationId})
+  const log = (req.log || defaultLog).child({ correlation_id: correlationId })
 
   const errorHtml = (message) => `
     <link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
@@ -187,14 +188,7 @@ function exportDone (req, res) {
   <div aria-live="polite" role="alert" class="alert alert-success">Done. The file should now be downloaded to your computer.</div>`)
 }
 
-async function curriedIsFake ({canvasApi, canvasApiUrl, canvasCourseId}) {
-  const fakeUsers = await canvasApi.get(`/courses/${canvasCourseId}/users?enrollment_type[]=student_view`)
-  return function (student) {
-    return fakeUsers.find(user => user.id === student.user_id)
-  }
-}
-
-async function getCustomColumnsFn ({canvasApi, canvasCourseId, canvasApiUrl}) {
+async function getCustomColumnsFn ({ canvasApi, canvasCourseId, canvasApiUrl }) {
   const customColumnsData = {}
   const customColumns = await canvasApi.get(`/courses/${canvasCourseId}/custom_gradebook_columns`)
   for (let customColumn of customColumns) {
@@ -227,10 +221,9 @@ function findDuplicates (data) {
 
 async function exportResults3 (req, res) {
   const correlationId = req.query.correlationId || req.id
-  const fetchedSections = {}
   const courseRound = req.query.courseRound
   const fileName = `${courseRound || 'canvas'}-${moment().format('YYYYMMDD-HHMMSS')}-results.csv`
-  const log = (req.log || defaultLog).child({fileName, correlation_id: correlationId})
+  const log = (req.log || defaultLog).child({ fileName, correlation_id: correlationId })
 
   const canvasCourseId = req.query.canvasCourseId
   log.info(`Should export for ${courseRound} / ${canvasCourseId}`)
@@ -273,12 +266,12 @@ async function exportResults3 (req, res) {
     const canvasApi = new CanvasApi(canvasApiUrl, accessToken)
     canvasApi.logger = log
 
-    const ldapClient = await ldap.getBoundClient({log})
+    const ldapClient = await ldap.getBoundClient({ log })
     ldap.logger = log
 
     // So far so good, start constructing the output
-    const {assignmentIds, headers} = await getAssignmentIdsAndHeaders({canvasApi, canvasCourseId})
-    const {getCustomColumnsData, customColumns} = await getCustomColumnsFn({canvasApi, canvasCourseId, canvasApiUrl})
+    const { assignmentIds, headers } = await getAssignmentIdsAndHeaders({ canvasApi, canvasCourseId })
+    const { getCustomColumnsData, customColumns } = await getCustomColumnsFn({ canvasApi, canvasCourseId, canvasApiUrl })
     const fixedColumnHeaders = [
       'SIS User ID',
       'ID',
@@ -299,47 +292,45 @@ async function exportResults3 (req, res) {
     res.write(csv.createLine(csvHeader))
 
     const usersInCourse = await canvasApi.get(`courses/${canvasCourseId}/users?enrollment_type[]=student&per_page=100`)
-    const isFake = await curriedIsFake({canvasApi, canvasApiUrl, canvasCourseId})
-    await canvasApi.get(`courses/${canvasCourseId}/students/submissions?grouped=1&student_ids[]=all`, async students => {
-      for (let student of students) {
-        try {
-          if (isFake(student)) {
-            continue
-          }
-          const section = fetchedSections[student.section_id] || await canvasApi.requestUrl(`sections/${student.section_id}`)
-          fetchedSections[student.section_id] = section
 
-          const canvasUser = usersInCourse.find(u => u.id === student.user_id)
-          const customColumnsData = getCustomColumnsData(student.user_id)
-          const csvLine = await createCsvLineContent({
-            student,
-            ldapClient,
-            assignmentIds,
-            section,
-            canvasUser,
-            customColumns,
-            customColumnsData
-          }, {
-            log
-          })
-          const csvString = csv.createLine(csvLine)
-          aggregatedData.push(csvString)
-          res.write(csvString)
-        } catch (e) {
-          log.error(`Export failed: `, e)
-          // Instead of writing a status:500, write an error in the file. Otherwise the browser will think that the download is finished.
-          res.write('An error occured when exporting a student. Something is probably missing in this file.')
-        }
+    const sections = await canvasApi.get(`courses/${canvasCourseId}/sections?include[]=students`)
+    const students = await getSubmissions({ canvasCourseId, sections, canvasApi })
+
+    for (let student of students) {
+      try {
+        const section = sections.find(section => section.id === student.section_id)
+
+        const canvasUser = usersInCourse.find(u => u.id === student.user_id)
+        const customColumnsData = getCustomColumnsData(student.user_id)
+        const csvLine = await createCsvLineContent({
+          student,
+          ldapClient,
+          assignmentIds,
+          section,
+          canvasUser,
+          customColumns,
+          customColumnsData
+        }, {
+          log
+        })
+        const csvString = csv.createLine(csvLine)
+        aggregatedData.push(csvString)
+        res.write(csvString)
+      } catch (e) {
+        log.error(`Export failed: `, e)
+        // Instead of writing a status:500, write an error in the file. Otherwise the browser will think that the download is finished.
+        res.write('An error occured when exporting a student. Something is probably missing in this file.')
       }
-    })
-    await ldapClient.unbind((err) => {
+    }
+
+    ldapClient.unbind((err) => {
       if (err) {
-        log.error('An error occured when unbinding ldap client')
-        log.error(err)
+          // Only log, since these errors are not at all critical. See more: https://ldap.com/the-ldap-unbind-operation/
+        log.info("Couldn't unbind ldap client. This is ok since I'm only unbinding to be polite anyways.", err)
       }
     })
   } catch (e) {
-    log.error(`Export failed for query ${req.query}:`, e)
+    log.error('Export failed for query: ', req.query, e)
     // Instead of writing a status:500, write an error in the file. Otherwise the browser will think that the download is finished.
     res.write('An error occured when exporting. Something is probably missing in this file.')
   }

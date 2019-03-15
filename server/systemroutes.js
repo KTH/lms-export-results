@@ -7,20 +7,20 @@ const version = require('../config/version')
 
 const router = express.Router()
 
-async function checkLdap ({log}) {
+async function checkLdap ({ log }) {
   let ldapClient
   try {
-    ldapClient = await ldap.getBoundClient({log})
-    const testUser = await ldap.lookupUser(ldapClient, 'u1famwov', {log})
+    ldapClient = await ldap.getBoundClient({ log })
+    const testUser = await ldap.lookupUser(ldapClient, 'u1famwov', { log })
 
     if (testUser.sn) {
-      return {ok: true, msg: `Could lookup u1famwov (got ${testUser.givenName} ${testUser.sn})`}
+      return { ok: true, msg: `Could lookup u1famwov (got ${testUser.givenName} ${testUser.sn})` }
     } else {
-      return {ok: false, msg: 'failed to lookup u1famwov in ldap'}
+      return { ok: false, msg: 'failed to lookup u1famwov in ldap' }
     }
   } catch (e) {
     log.error('LDAP check failed', e)
-    return {ok: false, msg: 'failed to lookup u1famwov in ldap'}
+    return { ok: false, msg: 'failed to lookup u1famwov in ldap' }
   } finally {
     if (ldapClient) {
       await ldapClient.unbind((err) => {
@@ -33,17 +33,17 @@ async function checkLdap ({log}) {
   }
 }
 
-async function checkIp ({log}) {
+async function checkIp ({ log }) {
   try {
     const t = await rp({
       method: 'GET',
       uri: 'https://api.ipify.org?format=json',
       json: true
     })
-    return {ok: true, msg: t.ip}
+    return { ok: true, msg: t.ip }
   } catch (e) {
     log.error('IP check failed', e)
-    return {ok: false, msg: 'failed IP test'}
+    return { ok: false, msg: 'failed IP test' }
   }
 }
 
@@ -65,8 +65,8 @@ function _about (req, res) {
 async function _monitor (req, res) {
   const log = req.log || defaultLog
   const checks = await Promise.all([
-    checkLdap({log}),
-    checkIp({log})
+    checkLdap({ log }),
+    checkIp({ log })
   ])
 
   res.setHeader('Content-Type', 'text/plain')

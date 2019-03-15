@@ -60,9 +60,6 @@ test(`should write a file
   const req = {query: {courseRound: 'round', canvasCourseId: 'canvasCourseId'}, get: () => ''}
 
   _export.__set__('getAccessToken', () => 'mocked token')
-  _export.__set__('curriedIsFake', () => () => {
-    return false
-  })
   await exportResults3(req, res)
   sinon.assert.calledWith(res.write, '\uFEFF')
   sinon.assert.calledWith(res.write, sinon.match('SIS User ID;ID;Section;Name;Surname;Personnummer'))
