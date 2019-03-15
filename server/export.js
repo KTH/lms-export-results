@@ -323,7 +323,7 @@ async function exportResults3 (req, res) {
       }
     }
 
-    await ldapClient.unbind((err) => {
+    ldapClient.unbind((err) => {
       if (err) {
         log.error('An error occured when unbinding ldap client')
         log.error(err)

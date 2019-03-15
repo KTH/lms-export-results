@@ -111,7 +111,7 @@ module.exports.create = async function createResultsFile (courseId, options) {
     },
 
     async iterateRows (callback) {
-      const ldapClient = await ldap.getBoundClient({log})
+      const ldapClient = await ldap.getBoundClient({ log })
 
       await canvasApi.get(`/courses/${courseId}/students/submissions?grouped=1&student_ids[]=all`, async students => {
         const realStudents = students.filter(isReal)
