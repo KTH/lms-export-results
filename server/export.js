@@ -326,7 +326,7 @@ async function exportResults3 (req, res) {
     ldapClient.unbind((err) => {
       if (err) {
           // Only log, since these errors are not at all critical. See more: https://ldap.com/the-ldap-unbind-operation/
-        log.info('An error occured when unbinding ldap client')
+        log.info("An error occured when unbinding ldap client. This is ok since I'm only unbinding to be polite anyways.")
         log.info(err)
       }
     })
