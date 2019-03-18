@@ -4,7 +4,6 @@ const querystring = require('querystring')
 const moment = require('moment')
 
 const defaultLog = require('./log')
-const settings = require('../config/serverSettings')
 const csv = require('./csvFile')
 const ResultsTable = require('./ResultsTable')
 
@@ -43,8 +42,8 @@ router.post('/start', (req, res) => {
       correlation_id: correlationId
     })
 
-    const canvasAuthUrl = `https://${settings.canvas.host}/login/oauth2/auth?` + querystring.stringify({
-      client_id: settings.canvas.clientId,
+    const canvasAuthUrl = `https://${process.env.CANVAS_HOST || 'kth.test.instructure.com'}/login/oauth2/auth?` + querystring.stringify({
+      client_id: process.env.CANVAS_CLIENT_ID,
       response_type: 'code',
       redirect_uri: downloadUrl.toString(),
       scope: [

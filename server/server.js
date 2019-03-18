@@ -1,8 +1,6 @@
 'use strict'
 const server = require('kth-node-server')
-// Now read the server config etc.
-const config = require('../config/serverSettings')
-const prefix = config.proxyPrefixPath.uri
+const prefix = process.env.PROXY_BASE || ''
 
 /* *******************************
  * *******KTH STYLE *******
@@ -50,7 +48,7 @@ const exportroutes = require('./exportroutes')
 server.use(prefix, systemroutes)
 server.use(prefix + '/v2', exportroutes)
 
-server.get(prefix, (req, res) => res.redirect(`${config.proxyPrefixPath.uri}/_about`))
+server.get(prefix, (req, res) => res.redirect(`${process.env.PROXY_BASE || ''}/_about`))
 
 server.post(prefix + '/export', exportResults)
 server.get(prefix + '/export2', exportResults2)
@@ -58,7 +56,7 @@ server.get(prefix + '/exportResults3', exportResults3)
 server.get(prefix + '/done', exportDone)
 
 // Temp route
-server.get(config.proxyPrefixPath.uri + '/test', (req, res) => res.send(`
+server.get(prefix + '/test', (req, res) => res.send(`
   <html>
   <link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
   <p>TODO: Detta är bara en testsida för att kunna testa hela oath2-flödet i prod. Så fort som produktion funkar ska denna route tas bort.</p>
