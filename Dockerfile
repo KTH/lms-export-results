@@ -1,4 +1,4 @@
-FROM node:10.12-alpine
+FROM node:10-alpine
 
 # We do this to avoid npm install when we're only changing code
 COPY ["config", "config"]
