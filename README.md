@@ -4,9 +4,9 @@ used for Ladok import (first attempt).
 
 ### Node version
 
-This project uses node version 8.
+This project uses node version 10.
 
-    nvm install 8
+    nvm install 10 
     npm install
     npm run start-dev
 
