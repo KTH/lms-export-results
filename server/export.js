@@ -11,6 +11,14 @@ const moment = require('moment')
 const _ = require('lodash')
 const canvasApiUrl = `https://${settings.canvas.host}/api/v1`
 
+function TAException () {
+  this.value = 'TA'
+  this.message = 'Teaching assistants are not allowed to export results.'
+  this.toString = function () {
+    return this.value + this.message
+  }
+}
+
 function exportResults (req, res) {
   const correlationId = req.id
   const log = (req.log || defaultLog).child({ correlation_id: correlationId })
@@ -18,6 +26,9 @@ function exportResults (req, res) {
   try {
     let b = req.body
     log.info(`The user ${b.lis_person_sourcedid}, ${b.custom_canvas_user_login_id}, is exporting the course ${b.context_label} with id ${b.custom_canvas_course_id}`)
+    if (b.ext_roles.includes('urn:lti:role:ims/lis/TeachingAssistant')) {
+      throw new TAException()
+    }
     let courseRound = b.lis_course_offering_sourcedid
     const canvasCourseId = b.custom_canvas_course_id
     const fullUrl = (settings.proxyBase || (req.protocol + '://' + req.get('host'))) + req.originalUrl
@@ -40,8 +51,14 @@ function exportResults (req, res) {
     res.redirect(basicUrl)
   } catch (e) {
     log.error('Export failed:', e)
+    let userFeedback
+    if (e instanceof TAException) {
+      userFeedback = 'Teaching assistants are not allowed to export results.'
+    } else {
+      userFeedback = 'Something has gone wrong, try again later.'
+    }
     res.status(500).send(`<link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
-    <div aria-live="polite" role="alert" class="alert alert-danger">Smth has gone wrong, try it later.</div>`)
+    <div aria-live="polite" role="alert" class="alert alert-danger">${userFeedback}</div>`)
   }
 }
 
@@ -179,7 +196,7 @@ function exportResults2 (req, res) {
   } catch (e) {
     log.error('Export failed:', e)
     res.status(500).send(`<link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
-    <div aria-live="polite" role="alert" class="alert alert-danger">Smth has gone wrong, try it later.</div>`)
+    <div aria-live="polite" role="alert" class="alert alert-danger">Something has gone wrong, try it later.</div>`)
   }
 }
 
@@ -325,7 +342,7 @@ async function exportResults3 (req, res) {
 
     ldapClient.unbind((err) => {
       if (err) {
-          // Only log, since these errors are not at all critical. See more: https://ldap.com/the-ldap-unbind-operation/
+        // Only log, since these errors are not at all critical. See more: https://ldap.com/the-ldap-unbind-operation/
         log.info("Couldn't unbind ldap client. This is ok since I'm only unbinding to be polite anyways.", err)
       }
     })
