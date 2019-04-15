@@ -26,7 +26,7 @@ function exportResults (req, res) {
   try {
     let b = req.body
     log.info(`The user ${b.lis_person_sourcedid}, ${b.custom_canvas_user_login_id}, is exporting the course ${b.context_label} with id ${b.custom_canvas_course_id}`)
-    if (b.ext_roles.includes('urn:lti:role:ims/lis/TeachingAssistant')) {
+    if (b.ext_roles && b.ext_roles.includes('urn:lti:role:ims/lis/TeachingAssistant')) {
       throw new TAException()
     }
     let courseRound = b.lis_course_offering_sourcedid
