@@ -16,17 +16,25 @@ test('"iterateLines()" with 0 students should finish without calling the callbac
   const ldapClientMock = {
     unbind: () => {}
   }
-  class CanvasApiMock {
-    get (url, cb) {
-      cb([])
-      return []
+  function fakeCanvas () {
+    return {
+      get () {
+        return {
+          headers: {
+            link: '<bogus-url>; rel="first"'
+          }
+        }
+      },
+      list () {
+        return []
+      }
     }
   }
 
   ResultsTable.__set__('ldap.getBoundClient', () => ldapClientMock)
-  ResultsTable.__set__('CanvasApi', CanvasApiMock)
+  ResultsTable.__set__('canvas', fakeCanvas)
 
-  const file = await ResultsTable.create('canvas_course_id', {log, oauth: {}})
+  const file = await ResultsTable.create('canvas_course_id', { log, oauth: {} })
 
   await file.iterateRows(() => {
     t.fail('the callback was called')
@@ -39,27 +47,29 @@ test('"iterateLines()" with 1 student should throw an error if preload() was not
   const ldapClientMock = {
     unbind: () => {}
   }
-  class CanvasApiMock {
-    async get (url, cb) {
-      if (url.includes('sections')) {
-        return {
-          id: 'section_id',
-          name: 'section_name'
+  function fakeCanvas () {
+    return {
+      listPaginated (url) {
+        if (url.includes('sections')) {
+          return {
+            id: 'section_id',
+            name: 'section_name'
+          }
+        } else if (url.includes('students/submissions')) {
+          return [
+            { id: '1' }
+          ]
+        } else {
+          return []
         }
-      } else if (url.includes('students/submissions')) {
-        await cb([
-          {id: '1'}
-        ])
-      } else {
-        return []
       }
     }
   }
 
   ResultsTable.__set__('ldap.getBoundClient', () => ldapClientMock)
-  ResultsTable.__set__('CanvasApi', CanvasApiMock)
+  ResultsTable.__set__('canvas', fakeCanvas)
 
-  const file = await ResultsTable.create('canvas_course_id', {log, oauth: {}})
+  const file = await ResultsTable.create('canvas_course_id', { log, oauth: {} })
 
   try {
     await file.iterateRows(() => {
@@ -74,7 +84,7 @@ test('"iterateLines()" with 1 student should throw an error if preload() was not
 
 test('"iterateLines()" should work normally', async t => {
   const ldapMock = {
-    getBoundClient() {
+    getBoundClient () {
       return {
         unbind: () => {}
       }
@@ -90,51 +100,59 @@ test('"iterateLines()" should work normally', async t => {
     }
   }
 
-  class CanvasApiMock {
-    async get (url, cb) {
-      if (url.includes('courses/canvas_course_id/assignments')) {
-        return [
-          {name: 'Assignment 1', id: 'a1'},
-          {name: 'Assignment 2', id: 'a2'}
-        ]
-      } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student_view')) {
-        return []
-      } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student')) {
-        return [
-          {name: 'John', id: 'u1', login_id: 'john@example.com'}
-        ]
-      } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns/cc1/data')) {
-        return [
-          {user_id: 'u1', content: 'CC content'}
-        ]
-      } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns')) {
-        return [
-          {title: 'CC 1', id: 'cc1', position: 0}
-        ]
-      } else if (url.includes('courses/canvas_course_id/students/submissions')) {
-        return cb([{
+  function fakeCanvas () {
+    return {
+      get (url) {
+        if (url.includes('sections/section1')) {
+          return { name: 'Section 1' }
+        } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns/cc1/data')) {
+          return [
+            { user_id: 'u1', content: 'CC content' }
+          ]
+        } else {
+          return {
+            headers: {
+              link: '<bogus-url>; rel="first"'
+            }
+          }
+        }
+      },
+      list () {
+        return [{
           user_id: 'u1',
           sis_user_id: 'sis1',
           section_id: 'section1',
           submissions: [
-            {assignment_id: 'a1', submitted_at: 'SUBMISSION-1', entered_grade: 'pass1'},
-            {assignment_id: 'a2', submitted_at: 'SUBMISSION-2', entered_grade: 'pass2'}
+            { assignment_id: 'a1', submitted_at: 'SUBMISSION-1', entered_grade: 'pass1' },
+            { assignment_id: 'a2', submitted_at: 'SUBMISSION-2', entered_grade: 'pass2' }
           ]
-        }])
-      }
-    }
-
-    async requestUrl (url) {
-      if (url.includes('sections/section1')) {
-        return {name: 'Section 1'}
+        }]
+      },
+      listPaginated (url) {
+        if (url.includes('courses/canvas_course_id/assignments')) {
+          return [
+            { name: 'Assignment 1', id: 'a1' },
+            { name: 'Assignment 2', id: 'a2' }
+          ]
+        } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student_view')) {
+          return []
+        } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student')) {
+          return [
+            { name: 'John', id: 'u1', login_id: 'john@example.com' }
+          ]
+        } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns')) {
+          return [
+            { title: 'CC 1', id: 'cc1', position: 0 }
+          ]
+        }
       }
     }
   }
 
   ResultsTable.__set__('ldap', ldapMock)
-  ResultsTable.__set__('CanvasApi', CanvasApiMock)
+  ResultsTable.__set__('canvas', fakeCanvas)
 
-  const file = await ResultsTable.create('canvas_course_id', {log, oauth: {}})
+  const file = await ResultsTable.create('canvas_course_id', { log, oauth: {} })
 
   await file.preload()
 
@@ -152,7 +170,7 @@ test('"iterateLines()" should work normally', async t => {
 
 test('"iterateLines()" should work even if some fields are missing', async t => {
   const ldapMock = {
-    getBoundClient() {
+    getBoundClient () {
       return {
         unbind: () => {}
       }
@@ -160,47 +178,55 @@ test('"iterateLines()" should work even if some fields are missing', async t => 
     lookupUser () {}
   }
 
-  class CanvasApiMock {
-    async get (url, cb) {
-      if (url.includes('courses/canvas_course_id/assignments')) {
-        return [
-          {name: 'Assignment 1', id: 'a1'},
-        ]
-      } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student_view')) {
-        return []
-      } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student')) {
-        return [
-          {name: 'John', id: 'u1', login_id: 'john@example.com'}
-        ]
-      } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns/cc1/data')) {
-        return [
-          {user_id: 'u1', content: 'CC content'}
-        ]
-      } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns')) {
-        return [
-          {title: 'CC 1', id: 'cc1', position: 0}
-        ]
-      } else if (url.includes('courses/canvas_course_id/students/submissions')) {
-        return cb([{
+  function fakeCanvas () {
+    return {
+      list () {
+        return [{
           user_id: 'u1',
           sis_user_id: 'sis1',
           section_id: 'section1',
           submissions: []
-        }])
-      }
-    }
-
-    async requestUrl (url) {
-      if (url.includes('sections/section1')) {
-        return {}
+        }]
+      },
+      listPaginated (url) {
+        if (url.includes('courses/canvas_course_id/assignments')) {
+          return [
+            { name: 'Assignment 1', id: 'a1' }
+          ]
+        } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student_view')) {
+          return []
+        } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student')) {
+          return [
+            { name: 'John', id: 'u1', login_id: 'john@example.com' }
+          ]
+        } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns')) {
+          return [
+            { title: 'CC 1', id: 'cc1', position: 0 }
+          ]
+        }
+      },
+      get (url) {
+        if (url.includes('sections/section1')) {
+          return {}
+        } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns/cc1/data')) {
+          return [
+            { user_id: 'u1', content: 'CC content' }
+          ]
+        } else {
+          return {
+            headers: {
+              link: '<bogus-url>; rel="first"'
+            }
+          }
+        }
       }
     }
   }
 
   ResultsTable.__set__('ldap', ldapMock)
-  ResultsTable.__set__('CanvasApi', CanvasApiMock)
+  ResultsTable.__set__('canvas', fakeCanvas)
 
-  const file = await ResultsTable.create('canvas_course_id', {log, oauth: {}})
+  const file = await ResultsTable.create('canvas_course_id', { log, oauth: {} })
 
   await file.preload()
 
@@ -217,7 +243,7 @@ test('"iterateLines()" should work even if some fields are missing', async t => 
 
 test('returned assignments should be in the right order', async t => {
   const ldapMock = {
-    getBoundClient() {
+    getBoundClient () {
       return {
         unbind: () => {}
       }
@@ -239,32 +265,16 @@ test('returned assignments should be in the right order', async t => {
     }
   }
 
-  class CanvasApiMock {
-    async get (url, cb) {
-      if (url.includes('courses/canvas_course_id/assignments')) {
+  function fakeCanvas () {
+    return {
+      list () {
         return [
-          {name: 'Assignment 1', id: 'a1'},
-          {name: 'Assignment 2', id: 'a2'}
-        ]
-      } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student_view')) {
-        return []
-      } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student')) {
-        return [
-          {name: 'John', id: 'u1', login_id: 'john@example.com'},
-          {name: 'Anna', id: 'u2', login_id: 'anna@example.com'}
-        ]
-      } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns/cc1/data')) {
-        return []
-      } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns')) {
-        return []
-      } else if (url.includes('courses/canvas_course_id/students/submissions')) {
-        return cb([
           {
             user_id: 'u1',
             sis_user_id: 'sis1',
             section_id: 'section1',
             submissions: [
-              {assignment_id: 'a2', submitted_at: 'SUBMISSION-1-2', entered_grade: 'pass1-2'}
+              { assignment_id: 'a2', submitted_at: 'SUBMISSION-1-2', entered_grade: 'pass1-2' }
             ]
           },
           {
@@ -272,25 +282,49 @@ test('returned assignments should be in the right order', async t => {
             sis_user_id: 'sis2',
             section_id: 'section1',
             submissions: [
-              {assignment_id: 'a1', submitted_at: 'SUBMISSION-2-1', entered_grade: 'pass2-1'},
-              {assignment_id: 'a2', submitted_at: 'SUBMISSION-2-2', entered_grade: 'pass2-2'}
+              { assignment_id: 'a1', submitted_at: 'SUBMISSION-2-1', entered_grade: 'pass2-1' },
+              { assignment_id: 'a2', submitted_at: 'SUBMISSION-2-2', entered_grade: 'pass2-2' }
             ]
           }
-        ])
-      }
-    }
-
-    async requestUrl (url) {
-      if (url.includes('sections/section1')) {
-        return {name: 'Section 1'}
+        ]
+      },
+      listPaginated (url) {
+        if (url.includes('courses/canvas_course_id/assignments')) {
+          return [
+            { name: 'Assignment 1', id: 'a1' },
+            { name: 'Assignment 2', id: 'a2' }
+          ]
+        } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student_view')) {
+          return []
+        } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student')) {
+          return [
+            { name: 'John', id: 'u1', login_id: 'john@example.com' },
+            { name: 'Anna', id: 'u2', login_id: 'anna@example.com' }
+          ]
+        } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns')) {
+          return []
+        }
+      },
+      get (url) {
+        if (url.includes('sections/section1')) {
+          return { name: 'Section 1' }
+        } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns/cc1/data')) {
+          return []
+        } else {
+          return {
+            headers: {
+              link: '<bogus-url>; rel="first"'
+            }
+          }
+        }
       }
     }
   }
 
   ResultsTable.__set__('ldap', ldapMock)
-  ResultsTable.__set__('CanvasApi', CanvasApiMock)
+  ResultsTable.__set__('canvas', fakeCanvas)
 
-  const file = await ResultsTable.create('canvas_course_id', {log, oauth: {}})
+  const file = await ResultsTable.create('canvas_course_id', { log, oauth: {} })
 
   await file.preload()
   const body = []

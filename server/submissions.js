@@ -9,9 +9,26 @@ async function getSubmissions ({ canvasCourseId, sections, canvasApi }) {
 
   // Flatten the students array
   const students = [].concat(...studentsPerSection)
-  const submissions = await canvasApi.get(`courses/${canvasCourseId}/students/submissions?student_ids[]=all&per_page=100`)
-  const studentsWithSubmissions = students.map(student => ({ ...student, submissions: submissions.filter(sub => sub.user_id === student.user_id) }))
+  const url = `/courses/${canvasCourseId}/students/submissions`
+  const response = await canvasApi.get(url, { student_ids: 'all' })
+  const next = response.headers.link.split(',').find(l => l.search(/rel="first"$/) !== -1)
+  const nextUrl = next && next.match(/<(.*?)>/)
+  if (nextUrl && nextUrl[1]) {
+    const splitUrl = nextUrl[1].split('?')
+    const qsArray = splitUrl[1].split('&')
+    const qsParams = {}
+    for (const item of qsArray) {
+      const splitItem = item.split('=')
+      qsParams[splitItem[0]] = splitItem[1]
+    }
+    const submissions = []
+    for await (const submission of canvasApi.list(url, qsParams)) {
+      submissions.push(submission)
+    }
 
-  return studentsWithSubmissions
+    return students.map(student => ({ ...student, submissions: submissions.filter(sub => sub.user_id === student.user_id) }))
+  } else {
+    throw Error('Get submissions failed due to missing Link header')
+  }
 }
 module.exports = { getSubmissions }

@@ -4,7 +4,7 @@ const querystring = require('querystring')
 const { getSubmissions } = require('./submissions')
 const rp = require('request-promise')
 const settings = require('../config/serverSettings')
-const CanvasApi = require('kth-canvas-api')
+const canvas = require('@kth/canvas-api')
 const csv = require('./csvFile')
 const ldap = require('./ldap')
 const moment = require('moment')
@@ -65,13 +65,12 @@ async function getAssignmentIdsAndHeaders ({ canvasApi, canvasCourseId }) {
   const assignmentIds = []
   const headers = {}
 
-  const assignments = await canvasApi.get(`/courses/${canvasCourseId}/assignments`)
-
-  for (let t of assignments) {
-    const id = '' + t.id
+  for await (const assignment of canvasApi.list(`/courses/${canvasCourseId}/assignments`)) {
+    const id = '' + assignment.id
     assignmentIds.push(id)
-    headers[id] = `${t.name} (${t.id})`
+    headers[id] = `${assignment.name} (${assignment.id})`
   }
+
   return { assignmentIds, headers }
 }
 
@@ -189,15 +188,18 @@ function exportDone (req, res) {
 }
 
 async function getCustomColumnsFn ({ canvasApi, canvasCourseId, canvasApiUrl }) {
+  const customColumns = []
+  for await (const page of canvasApi.listPaginated(`/courses/${canvasCourseId}/custom_gradebook_columns`)) {
+    customColumns.push(...page)
+  }
   const customColumnsData = {}
-  const customColumns = await canvasApi.get(`/courses/${canvasCourseId}/custom_gradebook_columns`)
-  for (let customColumn of customColumns) {
-    const data = await canvasApi.get(`/courses/${canvasCourseId}/custom_gradebook_columns/${customColumn.id}/data`)
-    for (let dataEntry of data) {
+  for (const customColumn of customColumns) {
+    for await (const dataEntry of canvasApi.list(`/courses/${canvasCourseId}/custom_gradebook_columns/${customColumn.id}/data`)) {
       customColumnsData[dataEntry.user_id] = customColumnsData[dataEntry.user_id] || {}
       customColumnsData[dataEntry.user_id][customColumn.id] = dataEntry.content
     }
   }
+
   return {
     customColumns,
     getCustomColumnsData (userId) {
@@ -263,8 +265,7 @@ async function exportResults3 (req, res) {
   res.write('\uFEFF')
 
   try {
-    const canvasApi = new CanvasApi(canvasApiUrl, accessToken)
-    canvasApi.logger = log
+    const canvasApi = canvas(canvasApiUrl, accessToken)
 
     const ldapClient = await ldap.getBoundClient({ log })
     ldap.logger = log
@@ -291,9 +292,16 @@ async function exportResults3 (req, res) {
     ]
     res.write(csv.createLine(csvHeader))
 
-    const usersInCourse = await canvasApi.get(`courses/${canvasCourseId}/users?enrollment_type[]=student&per_page=100`)
+    const usersInCourse = []
+    for await (const page of canvasApi.listPaginated(`courses/${canvasCourseId}/users`, { 'enrollment_type[]': 'student' })) {
+      usersInCourse.push(...page)
+    }
 
-    const sections = await canvasApi.get(`courses/${canvasCourseId}/sections?include[]=students`)
+    const sections = []
+    for await (const page of canvasApi.listPaginated(`courses/${canvasCourseId}/sections`, { 'include[]': 'students' })) {
+      sections.push(...page)
+    }
+
     const students = await getSubmissions({ canvasCourseId, sections, canvasApi })
 
     for (let student of students) {
@@ -325,7 +333,7 @@ async function exportResults3 (req, res) {
 
     ldapClient.unbind((err) => {
       if (err) {
-          // Only log, since these errors are not at all critical. See more: https://ldap.com/the-ldap-unbind-operation/
+        // Only log, since these errors are not at all critical. See more: https://ldap.com/the-ldap-unbind-operation/
         log.info("Couldn't unbind ldap client. This is ok since I'm only unbinding to be polite anyways.", err)
       }
     })

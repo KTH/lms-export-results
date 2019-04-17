@@ -9,10 +9,10 @@ const createSubmissionLineContent = _export.__get__('createSubmissionLineContent
  * Return a canvasApi instance with a mocked "get" function
  */
 const setupCanvasApi = (canvasCourseId, assignments) => {
-  const canvasApi = {get: sinon.stub()}
+  const canvasApi = { list: sinon.stub() }
 
   canvasApi
-    .get.withArgs(`/courses/${canvasCourseId}/assignments`)
+    .list.withArgs(`/courses/${canvasCourseId}/assignments`)
     .returns(assignments)
 
   return canvasApi
@@ -24,7 +24,7 @@ test('should get assignment ids and headers', async t => {
     { id: 0, name: 'Assignment 1' }
   ])
 
-  const result = await getAssignmentIdsAndHeaders({canvasApi, canvasCourseId})
+  const result = await getAssignmentIdsAndHeaders({ canvasApi, canvasCourseId })
 
   const expected = {
     assignmentIds: ['0'],
@@ -41,7 +41,7 @@ test('should return empty arrays if there are no assignments', async t => {
   const canvasCourseId = 0
   const canvasApi = setupCanvasApi(canvasCourseId, [])
 
-  const result = await getAssignmentIdsAndHeaders({canvasApi, canvasCourseId})
+  const result = await getAssignmentIdsAndHeaders({ canvasApi, canvasCourseId })
 
   const expected = {
     assignmentIds: [],
@@ -52,14 +52,13 @@ test('should return empty arrays if there are no assignments', async t => {
   t.end()
 })
 
-
 test('should return an empty array if no submissions', async t => {
   const student = {
     submissions: []
   }
   const assignmentIds = []
 
-  const result = createSubmissionLineContent({student, assignmentIds})
+  const result = createSubmissionLineContent({ student, assignmentIds })
   const expected = []
 
   t.deepEqual(result, expected)
@@ -69,17 +68,16 @@ test('should return an empty array if no submissions', async t => {
 test('should return string results even for non-existent data', t => {
   const student = {
     submissions: [
-      {assignment_id: 0},
-      {assignment_id: 15, entered_grade: 'L'},
-      {assignment_id: 16, entered_grade: 'O'},
-      {assignment_id: 23, entered_grade: 'S'},
-      {assignment_id: 42, entered_grade: 'T'},
+      { assignment_id: 0 },
+      { assignment_id: 15, entered_grade: 'L' },
+      { assignment_id: 16, entered_grade: 'O' },
+      { assignment_id: 23, entered_grade: 'S' },
+      { assignment_id: 42, entered_grade: 'T' }
     ]
   }
   const assignmentIds = [4, 8, 15, 16, 23, 42]
 
-
-  const result = createSubmissionLineContent({student, assignmentIds})
+  const result = createSubmissionLineContent({ student, assignmentIds })
 
   t.equal(result.length, 12)
 
@@ -89,7 +87,6 @@ test('should return string results even for non-existent data', t => {
 
   t.end()
 })
-
 
 test('createSubmission 2x elements as getAssignmentIds', async t => {
   const canvasCourseId = 0
@@ -106,8 +103,8 @@ test('createSubmission 2x elements as getAssignmentIds', async t => {
     submissions: []
   }
 
-  const {assignmentIds, headers} = await getAssignmentIdsAndHeaders({canvasApi, canvasCourseId})
-  const result = createSubmissionLineContent({student, assignmentIds})
+  const { assignmentIds, headers } = await getAssignmentIdsAndHeaders({ canvasApi, canvasCourseId })
+  const result = createSubmissionLineContent({ student, assignmentIds })
 
   t.ok(
     Object.keys(headers).length * 2 === result.length,

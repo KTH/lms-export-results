@@ -3,19 +3,29 @@ const rewire = require('rewire')
 const sinon = require('sinon')
 const _export = rewire('../../server/export')
 
-class CanvasApi {
-  get (url) {
-    console.log('>>>>>>>> Mocking requestUrl <<<<<<<<', url)
-    return []
+function canvas () {
+  return {
+    get: function (url) {
+      console.log('>>>>>>>> Mocking requestUrl <<<<<<<<', url)
+      return []
+    },
+    list: function (url) {
+      console.log('>>>>>>>> Mocking list <<<<<<<<', url)
+      return []
+    },
+    listPaginated: function (url) {
+      console.log('>>>>>>>> Mocking listPaginated <<<<<<<<', url)
+      return []
+    }
   }
 }
 
-_export.__set__('CanvasApi', CanvasApi)
+_export.__set__('canvas', canvas)
 _export.__set__('ldap', {
   getBoundClient () {
     console.log('mocking ldap client')
     return {
-      unbind(){}
+      unbind () {}
     }
   }
 })
@@ -24,8 +34,8 @@ const exportResults = _export.__get__('exportResults')
 const exportResults3 = _export.__get__('exportResults3')
 
 test('should redirect to the Canvas authentication page', t => {
-  const res = {redirect: sinon.spy()}
-  const req = {body: {}, get: () => ''}
+  const res = { redirect: sinon.spy() }
+  const req = { body: {}, get: () => '' }
 
   exportResults(req, res)
 
@@ -34,12 +44,13 @@ test('should redirect to the Canvas authentication page', t => {
 })
 
 test('should send status:500 if exportResults breaks', t => {
-  const res = {status: sinon.stub().returns({
+  const res = { status: sinon.stub().returns({
     send () {}
-  })}
-  const req = {body: {}, get: () => {
-    throw new Error('Just pretending that something breaks...')
-  }}
+  }) }
+  const req = { body: {},
+    get: () => {
+      throw new Error('Just pretending that something breaks...')
+    } }
 
   exportResults(req, res)
 
@@ -57,7 +68,7 @@ test(`should write a file
     write: sinon.spy(),
     send () {}
   }
-  const req = {query: {courseRound: 'round', canvasCourseId: 'canvasCourseId'}, get: () => ''}
+  const req = { query: { courseRound: 'round', canvasCourseId: 'canvasCourseId' }, get: () => '' }
 
   _export.__set__('getAccessToken', () => 'mocked token')
   await exportResults3(req, res)

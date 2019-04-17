@@ -1,4 +1,4 @@
-const CanvasApi = require('kth-canvas-api')
+const canvas = require('@kth/canvas-api')
 const ldap = require('./ldap')
 const rp = require('request-promise')
 
@@ -31,7 +31,7 @@ module.exports.create = async function createResultsFile (courseId, options) {
 
   // From here, the "createResultsFile" function (this function) should finish
   // as early as possible not awaiting for slow promises
-  const canvasApi = new CanvasApi(`https://${process.env.CANVAS_HOST}/api/v1`, accessToken)
+  const canvasApi = canvas(`https://${process.env.CANVAS_HOST}/api/v1`, accessToken)
   const sectionsCache = {}
   const customColumnsCache = {}
   let assignments
@@ -41,7 +41,7 @@ module.exports.create = async function createResultsFile (courseId, options) {
 
   async function getSection (sectionId) {
     if (!sectionsCache[sectionId]) {
-      sectionsCache[sectionId] = await canvasApi.requestUrl(`sections/${sectionId}`)
+      sectionsCache[sectionId] = await canvasApi.get(`sections/${sectionId}`).body
     }
     return sectionsCache[sectionId]
   }
@@ -63,16 +63,45 @@ module.exports.create = async function createResultsFile (courseId, options) {
 
   return {
     async preload () {
-      assignments = await canvasApi.get(`courses/${courseId}/assignments`)
-      canvasUsers = (await canvasApi.get(`courses/${courseId}/users?enrollment_type[]=student&per_page=100`))
+      assignments = []
+      for await (const page of canvasApi.listPaginated(`courses/${courseId}/assignments`)) {
+        if (Array.isArray(page)) {
+          assignments.push(...page)
+        } else {
+          assignments.push(page)
+        }
+      }
 
-      fakeStudents = await canvasApi.get(`courses/${courseId}/users?enrollment_type[]=student_view`)
+      canvasUsers = []
+      for await (const page of canvasApi.listPaginated(`courses/${courseId}/users`, { 'enrollment_type[]': 'student' })) {
+        if (Array.isArray(page)) {
+          canvasUsers.push(...page)
+        } else {
+          canvasUsers.push(page)
+        }
+      }
 
-      customColumns = (await canvasApi.get(`courses/${courseId}/custom_gradebook_columns`))
-        .sort((c1, c2) => c1.position - c2.position) // Sort by "position" in "ascending" order
+      fakeStudents = []
+      for await (const page of canvasApi.listPaginated(`courses/${courseId}/users`, { 'enrollment_type[]': 'student_view' })) {
+        if (Array.isArray(page)) {
+          fakeStudents.push(...page)
+        } else {
+          fakeStudents.push(page)
+        }
+      }
+
+      customColumns = []
+      for await (const page of canvasApi.listPaginated(`courses/${courseId}/custom_gradebook_columns`)) {
+        if (Array.isArray(page)) {
+          customColumns.push(...page)
+        } else {
+          customColumns.push(page)
+        }
+      }
+      customColumns.sort((c1, c2) => c1.position - c2.position) // Sort by "position" in "ascending" order
 
       for (let column of customColumns) {
-        const data = await canvasApi.get(`courses/${courseId}/custom_gradebook_columns/${column.id}/data`)
+        const data = await canvasApi.get(`courses/${courseId}/custom_gradebook_columns/${column.id}/data`).body
         for (let d of data) {
           if (!customColumnsCache[d.user_id]) {
             customColumnsCache[d.user_id] = []
@@ -113,44 +142,58 @@ module.exports.create = async function createResultsFile (courseId, options) {
     async iterateRows (callback) {
       const ldapClient = await ldap.getBoundClient({ log })
 
-      await canvasApi.get(`/courses/${courseId}/students/submissions?grouped=1&student_ids[]=all`, async students => {
-        const realStudents = students.filter(isReal)
+      const url = `/courses/${courseId}/students/submissions`
+      const response = await canvasApi.get(url, { grouped: 1, 'student_ids[]': 'all' })
+      const next = response.headers.link.split(',').find(l => l.search(/rel="first"$/) !== -1)
+      const nextUrl = next && next.match(/<(.*?)>/)
+      if (nextUrl && nextUrl[1]) {
+        const splitUrl = nextUrl[1].split('?')
+        const qsArray = splitUrl[1].split('&')
+        const qsParams = {}
+        for (const item of qsArray) {
+          const splitItem = item.split('=')
+          qsParams[splitItem[0]] = splitItem[1]
+        }
+        for await (const student of canvasApi.list(url, qsParams)) {
+          if (isReal(student)) {
+            try {
+              const section = await getSection(student.section_id)
+              const canvasUser = canvasUsers.find(cu => cu.id === student.user_id)
+              const ldapUser = (await ldap.lookupUser(ldapClient, student.sis_user_id)) || {}
 
-        for (let student of realStudents) {
-          try {
-            const section = await getSection(student.section_id)
-            const canvasUser = canvasUsers.find(cu => cu.id === student.user_id)
-            const ldapUser = (await ldap.lookupUser(ldapClient, student.sis_user_id)) || {}
+              const fixedData = [
+                student.sis_user_id || '',
+                student.user_id || '',
+                section.name || '',
+                ldapUser.givenName || (canvasUser && canvasUser.name) || '',
+                ldapUser.sn || '',
+                `="${ldapUser.personnummer || ''}"`,
+                (canvasUser && canvasUser.login_id) || "Not displaying email for users that hasn't accepted invitation to course"
+              ]
 
-            const fixedData = [
-              student.sis_user_id || '',
-              student.user_id || '',
-              section.name || '',
-              ldapUser.givenName || (canvasUser && canvasUser.name) || '',
-              ldapUser.sn || '',
-              `="${ldapUser.personnummer || ''}"`,
-              (canvasUser && canvasUser.login_id) || "Not displaying email for users that hasn't accepted invitation to course"
-            ]
+              const assignmentsData = sortSubmissions(student.submissions)
+                .map(submission => [
+                  (submission && submission.submitted_at) || '',
+                  (submission && submission.entered_grade) || ''
+                ])
+                .reduce(flattenReducer, [])
 
-            const assignmentsData = sortSubmissions(student.submissions)
-              .map(submission => [
-                (submission && submission.submitted_at) || '',
-                (submission && submission.entered_grade) || ''
+              const customColumnsData = await getCustomColumnsData(student.user_id)
+
+              // TODO: Replace with Array.prototype.flat() once supported by Node.js used (11+)
+              callback([
+                ...fixedData,
+                ...customColumnsData,
+                ...assignmentsData
               ])
-              .reduce(flattenReducer, [])
-
-            const customColumnsData = await getCustomColumnsData(student.user_id)
-
-            callback([
-              ...fixedData,
-              ...customColumnsData,
-              ...assignmentsData // TODO: Replace with array.prototype.flatten() when Node 10!!
-            ])
-          } catch (e) {
-            log.error('Error. Export failed', e)
+            } catch (e) {
+              log.error('Error. Export failed', e)
+            }
           }
         }
-      })
+      } else {
+        log.error('Error. Export failed due to missing Link header.')
+      }
 
       await ldapClient.unbind((err) => {
         if (err) {
