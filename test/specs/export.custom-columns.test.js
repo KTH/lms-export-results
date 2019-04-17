@@ -14,7 +14,7 @@ test('should return a function with user_id as argument, and the column data as 
   const columnId2 = 2
 
   // Columns
-  canvasApi.listPaginated.withArgs(`/courses/${canvasCourseId}/custom_gradebook_columns`).returns([
+  canvasApi.listPaginated.withArgs(`/courses/${canvasCourseId}/custom_gradebook_columns`).returns([[
     {
       id: columnId,
       title: 'Anteckningar',
@@ -28,7 +28,7 @@ test('should return a function with user_id as argument, and the column data as 
       teacher_notes: false,
       hidden: false
     }
-  ])
+  ]])
 
   // Column data
   canvasApi.list.withArgs(`/courses/${canvasCourseId}/custom_gradebook_columns/${columnId}/data`).returns(
@@ -115,7 +115,7 @@ test(`should return a function with user_id as argument,
   const columnId = 1
 
   // Columns
-  canvasApi.listPaginated.withArgs(`/courses/${canvasCourseId}/custom_gradebook_columns`).returns([
+  canvasApi.listPaginated.withArgs(`/courses/${canvasCourseId}/custom_gradebook_columns`).returns([[
     {
       id: columnId,
       title: 'Anteckningar',
@@ -123,7 +123,7 @@ test(`should return a function with user_id as argument,
       teacher_notes: true,
       hidden: false
     }
-  ])
+  ]])
 
   // Column data
   canvasApi.list.withArgs(`/courses/${canvasCourseId}/custom_gradebook_columns/${columnId}/data`).returns(

@@ -63,9 +63,9 @@ test('"getHeaders()" should return 9 headers when data is one assignment (7 fixe
       },
       listPaginated (url) {
         if (url.includes('assignments')) {
-          return [{ id: ASSIGNMENT_ID, name: ASSIGNMENT_NAME }]
+          return [[{ id: ASSIGNMENT_ID, name: ASSIGNMENT_NAME }]]
         } else {
-          return []
+          return [[]]
         }
       }
     }
@@ -105,9 +105,9 @@ test('"getHeaders()" returns 15 headers when data are four assignment (7 fixed +
       },
       listPaginated (url) {
         if (url.includes('assignments')) {
-          return assignments
+          return [assignments]
         } else {
-          return []
+          return [[]]
         }
       }
     }
@@ -147,15 +147,15 @@ test('"getHeaders() returns 10 headers when data are 1 assignment + 1 custom col
   function fakeCanvas () {
     return {
       get (url) {
-        return []
+        return { body: [] }
       },
       listPaginated (url) {
         if (url.includes('assignments')) {
-          return [{ id: 'a1', name: 'a1name' }]
+          return [[{ id: 'a1', name: 'a1name' }]]
         } else if (url.includes('custom_gradebook_columns') && !url.includes('data')) {
-          return [{ position: 0, title: 'custom column 1' }]
+          return [[{ position: 0, title: 'custom column 1' }]]
         } else {
-          return []
+          return [[]]
         }
       }
     }
@@ -177,17 +177,17 @@ test('"getHeaders() returns custom columns sorted by "position" in Canvas', asyn
   function fakeCanvas () {
     return {
       get (url) {
-        return []
+        return { body: [] }
       },
       listPaginated (url) {
         if (url.includes('custom_gradebook_columns') && !url.includes('data')) {
-          return [
+          return [[
             { position: 2, title: 'custom column 2' },
             { position: 0, title: 'custom column 0' },
             { position: 1, title: 'custom column 1' }
-          ]
+          ]]
         } else {
-          return []
+          return [[]]
         }
       }
     }

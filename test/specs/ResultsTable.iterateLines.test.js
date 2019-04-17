@@ -21,7 +21,7 @@ test('"iterateLines()" with 0 students should finish without calling the callbac
       get () {
         return {
           headers: {
-            link: '<bogus-url>; rel="first"'
+            link: '<bogus-url?query=string>; rel="first"'
           }
         }
       },
@@ -104,15 +104,15 @@ test('"iterateLines()" should work normally', async t => {
     return {
       get (url) {
         if (url.includes('sections/section1')) {
-          return { name: 'Section 1' }
+          return { body: { name: 'Section 1' } }
         } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns/cc1/data')) {
-          return [
+          return { body: [
             { user_id: 'u1', content: 'CC content' }
-          ]
+          ] }
         } else {
           return {
             headers: {
-              link: '<bogus-url>; rel="first"'
+              link: '<bogus-url?query=string>; rel="first"'
             }
           }
         }
@@ -128,22 +128,22 @@ test('"iterateLines()" should work normally', async t => {
           ]
         }]
       },
-      listPaginated (url) {
+      listPaginated (url, qs) {
         if (url.includes('courses/canvas_course_id/assignments')) {
-          return [
+          return [[
             { name: 'Assignment 1', id: 'a1' },
             { name: 'Assignment 2', id: 'a2' }
-          ]
-        } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student_view')) {
-          return []
-        } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student')) {
-          return [
+          ]]
+        } else if (url.includes('courses/canvas_course_id/users') && qs['enrollment_type[]'] === 'student_view') {
+          return [[]]
+        } else if (url.includes('courses/canvas_course_id/users') && qs['enrollment_type[]'] === 'student') {
+          return [[
             { name: 'John', id: 'u1', login_id: 'john@example.com' }
-          ]
+          ]]
         } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns')) {
-          return [
+          return [[
             { title: 'CC 1', id: 'cc1', position: 0 }
-          ]
+          ]]
         }
       }
     }
@@ -188,34 +188,35 @@ test('"iterateLines()" should work even if some fields are missing', async t => 
           submissions: []
         }]
       },
-      listPaginated (url) {
+      listPaginated (url, qs) {
         if (url.includes('courses/canvas_course_id/assignments')) {
-          return [
+          return [[
             { name: 'Assignment 1', id: 'a1' }
-          ]
-        } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student_view')) {
-          return []
-        } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student')) {
-          return [
+          ]]
+        } else if (url.includes('courses/canvas_course_id/users') && qs['enrollment_type[]'] === 'student_view') {
+          return [[]]
+        } else if (url.includes('courses/canvas_course_id/users') && qs['enrollment_type[]'] === 'student') {
+          return [[
             { name: 'John', id: 'u1', login_id: 'john@example.com' }
-          ]
+          ]]
         } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns')) {
-          return [
+          return [[
             { title: 'CC 1', id: 'cc1', position: 0 }
-          ]
+          ]]
         }
       },
       get (url) {
         if (url.includes('sections/section1')) {
-          return {}
+          return { body: {} }
         } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns/cc1/data')) {
-          return [
+          return { body: [
             { user_id: 'u1', content: 'CC content' }
           ]
+          }
         } else {
           return {
             headers: {
-              link: '<bogus-url>; rel="first"'
+              link: '<bogus-url?query=string>; rel="first"'
             }
           }
         }
@@ -288,32 +289,32 @@ test('returned assignments should be in the right order', async t => {
           }
         ]
       },
-      listPaginated (url) {
+      listPaginated (url, qs) {
         if (url.includes('courses/canvas_course_id/assignments')) {
-          return [
+          return [[
             { name: 'Assignment 1', id: 'a1' },
             { name: 'Assignment 2', id: 'a2' }
-          ]
-        } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student_view')) {
+          ]]
+        } else if (url.includes('courses/canvas_course_id/users') && qs['enrollment_type[]'] === 'student_view') {
           return []
-        } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student')) {
-          return [
+        } else if (url.includes('courses/canvas_course_id/users') && qs['enrollment_type[]'] === 'student') {
+          return [[
             { name: 'John', id: 'u1', login_id: 'john@example.com' },
             { name: 'Anna', id: 'u2', login_id: 'anna@example.com' }
-          ]
+          ]]
         } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns')) {
           return []
         }
       },
       get (url) {
         if (url.includes('sections/section1')) {
-          return { name: 'Section 1' }
+          return { body: { name: 'Section 1' } }
         } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns/cc1/data')) {
-          return []
+          return { body: [] }
         } else {
           return {
             headers: {
-              link: '<bogus-url>; rel="first"'
+              link: '<bogus-url?query=string>; rel="first"'
             }
           }
         }

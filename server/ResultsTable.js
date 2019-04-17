@@ -65,38 +65,22 @@ module.exports.create = async function createResultsFile (courseId, options) {
     async preload () {
       assignments = []
       for await (const page of canvasApi.listPaginated(`courses/${courseId}/assignments`)) {
-        if (Array.isArray(page)) {
-          assignments.push(...page)
-        } else {
-          assignments.push(page)
-        }
+        assignments.push(...page)
       }
 
       canvasUsers = []
       for await (const page of canvasApi.listPaginated(`courses/${courseId}/users`, { 'enrollment_type[]': 'student' })) {
-        if (Array.isArray(page)) {
-          canvasUsers.push(...page)
-        } else {
-          canvasUsers.push(page)
-        }
+        canvasUsers.push(...page)
       }
 
       fakeStudents = []
       for await (const page of canvasApi.listPaginated(`courses/${courseId}/users`, { 'enrollment_type[]': 'student_view' })) {
-        if (Array.isArray(page)) {
-          fakeStudents.push(...page)
-        } else {
-          fakeStudents.push(page)
-        }
+        fakeStudents.push(...page)
       }
 
       customColumns = []
       for await (const page of canvasApi.listPaginated(`courses/${courseId}/custom_gradebook_columns`)) {
-        if (Array.isArray(page)) {
-          customColumns.push(...page)
-        } else {
-          customColumns.push(page)
-        }
+        customColumns.push(...page)
       }
       customColumns.sort((c1, c2) => c1.position - c2.position) // Sort by "position" in "ascending" order
 
