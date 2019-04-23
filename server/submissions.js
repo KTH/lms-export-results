@@ -9,7 +9,7 @@ async function getSubmissions ({ canvasCourseId, sections, canvasApi }) {
 
   // Flatten the students array
   const students = [].concat(...studentsPerSection)
-  const submissions = await canvasApi.get(`courses/${canvasCourseId}/students/submissions?student_ids[]=all&per_page=100`)
+  const submissions = await canvasApi.get(`courses/${canvasCourseId}/students/submissions?student_ids[]=all&order=id&order_direction=ascending&per_page=100`)
   const studentsWithSubmissions = students.map(student => ({ ...student, submissions: submissions.filter(sub => sub.user_id === student.user_id) }))
 
   return studentsWithSubmissions
