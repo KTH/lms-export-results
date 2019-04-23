@@ -48,7 +48,7 @@ const exportroutes = require('./exportroutes')
 server.use(prefix, systemroutes)
 server.use(prefix + '/v2', exportroutes)
 
-server.get(prefix, (req, res) => res.redirect(`${process.env.PROXY_BASE || ''}/_about`))
+server.get(prefix, (req, res) => res.redirect(`${prefix}/_about`))
 
 server.post(prefix + '/export', exportResults)
 server.get(prefix + '/export2', exportResults2)
