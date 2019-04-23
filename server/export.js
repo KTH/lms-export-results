@@ -16,8 +16,16 @@ function exportResults (req, res) {
   const log = (req.log || defaultLog).child({ correlation_id: correlationId })
 
   try {
-    let b = req.body
+    const b = req.body
     log.info(`The user ${b.lis_person_sourcedid}, ${b.custom_canvas_user_login_id}, is exporting the course ${b.context_label} with id ${b.custom_canvas_course_id}`)
+
+    if (b.ext_roles && b.ext_roles.includes('urn:lti:role:ims/lis/TeachingAssistant')) {
+      log.warn('Export failed due to TA access.')
+      res.status(403).send(`<link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
+      <div aria-live="polite" role="alert" class="alert alert-danger">Teaching assistants are not allowed to export results.</div>`)
+      return
+    }
+
     let courseRound = b.lis_course_offering_sourcedid
     const canvasCourseId = b.custom_canvas_course_id
     const fullUrl = (process.env.PROXY_BASE || (req.protocol + '://' + req.get('host'))) + req.originalUrl
@@ -41,7 +49,7 @@ function exportResults (req, res) {
   } catch (e) {
     log.error('Export failed:', e)
     res.status(500).send(`<link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
-    <div aria-live="polite" role="alert" class="alert alert-danger">Smth has gone wrong, try it later.</div>`)
+    <div aria-live="polite" role="alert" class="alert alert-danger">Something has gone wrong, try again later.</div>`)
   }
 }
 
@@ -179,7 +187,7 @@ function exportResults2 (req, res) {
   } catch (e) {
     log.error('Export failed:', e)
     res.status(500).send(`<link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
-    <div aria-live="polite" role="alert" class="alert alert-danger">Smth has gone wrong, try it later.</div>`)
+    <div aria-live="polite" role="alert" class="alert alert-danger">Something has gone wrong, try it later.</div>`)
   }
 }
 
