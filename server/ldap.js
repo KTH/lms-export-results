@@ -1,18 +1,17 @@
 const defaultLog = require('./log')
 const ldap = require('ldapjs')
-const settings = require('../config/serverSettings')
 
 function getBoundClient ({ log = defaultLog } = {}) {
   return new Promise((resolve, reject) => {
     const options = {
-      url: settings.ldap.url,
+      url: process.env.LDAP_URL || 'ldaps://ldap.referens.sys.kth.se',
       timeout: 10000,
       connectTimeout: 10000,
       log
     }
 
-    const username = settings.ldap.userName
-    const password = settings.ldap.password
+    const username = process.env.LDAP_USERNAME
+    const password = process.env.LDAP_PASSWORD
 
     log.info('Should get ldap client for', username, 'on', options.url)
     const ldapClient = ldap.createClient(options)
@@ -37,7 +36,7 @@ function getBoundClient ({ log = defaultLog } = {}) {
 function lookupUser (ldapClient, kthid, { log = defaultLog } = {}) {
   return new Promise((resolve, reject) => {
     ldapClient.search(
-      settings.ldap.base,
+      process.env.LDAP_BASE || 'ou=UG,dc=referens,dc=sys.dc=kth,dc=se',
       {
         scope: 'sub',
         filter: `(ugKthId=${kthid})`,
