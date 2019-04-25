@@ -14,13 +14,18 @@ function getFirstLinkQSParams (headers) {
 }
 
 async function getSubmissions ({ canvasCourseId, sections, canvasApi }) {
-  const studentsPerSection = sections.map(section => section.students.map(student => ({
-    user_id: student.id,
-    section_id: section.id,
-    submissions: [], // Add this to preserve the order of the properties, to make deepEqual possible
-    sis_user_id: student.sis_user_id,
-    integration_id: student.integration_id
-  })))
+  const studentsPerSection = sections.map((section) => {
+    if (!section.students) {
+      section.students = []
+    }
+    return section.students.map(student => ({
+      user_id: student.id,
+      section_id: section.id,
+      submissions: [], // Add this to preserve the order of the properties, to make deepEqual possible
+      sis_user_id: student.sis_user_id,
+      integration_id: student.integration_id
+    }))
+  })
 
   // Flatten the students array
   const students = [].concat(...studentsPerSection)
