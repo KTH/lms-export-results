@@ -3,29 +3,37 @@ const defaultLog = require('./log')
 const querystring = require('querystring')
 const { getSubmissions } = require('./submissions')
 const rp = require('request-promise')
-const settings = require('../config/serverSettings')
 const canvas = require('@kth/canvas-api')
 const csv = require('./csvFile')
 const ldap = require('./ldap')
 const moment = require('moment')
 const _ = require('lodash')
-const canvasApiUrl = `https://${settings.canvas.host}/api/v1`
+const canvasHost = process.env.CANVAS_HOST || 'kth.test.instructure.com'
+const canvasApiUrl = `https://${canvasHost}/api/v1`
 
 function exportResults (req, res) {
   const correlationId = req.id
   const log = (req.log || defaultLog).child({ correlation_id: correlationId })
 
   try {
-    let b = req.body
+    const b = req.body
     log.info(`The user ${b.lis_person_sourcedid}, ${b.custom_canvas_user_login_id}, is exporting the course ${b.context_label} with id ${b.custom_canvas_course_id}`)
+
+    if (b.ext_roles && b.ext_roles.includes('urn:lti:role:ims/lis/TeachingAssistant')) {
+      log.warn('Export failed due to TA access.')
+      res.status(403).send(`<link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
+      <div aria-live="polite" role="alert" class="alert alert-danger">Teaching assistants are not allowed to export results.</div>`)
+      return
+    }
+
     let courseRound = b.lis_course_offering_sourcedid
     const canvasCourseId = b.custom_canvas_course_id
-    const fullUrl = (settings.proxyBase || (req.protocol + '://' + req.get('host'))) + req.originalUrl
+    const fullUrl = (process.env.PROXY_BASE || (req.protocol + '://' + req.get('host'))) + req.originalUrl
     const nextUrl = fullUrl + '2?' + querystring.stringify({ courseRound, canvasCourseId, correlationId })
     log.info('Tell auth to redirect back to', nextUrl)
-    log.info('using canvas client id', settings.canvas.clientId)
-    const basicUrl = `https://${settings.canvas.host}/login/oauth2/auth?` + querystring.stringify({
-      client_id: settings.canvas.clientId,
+    log.info('using canvas client id', process.env.CANVAS_CLIENT_ID)
+    const basicUrl = `https://${canvasHost}/login/oauth2/auth?` + querystring.stringify({
+      client_id: process.env.CANVAS_CLIENT_ID,
       response_type: 'code',
       redirect_uri: nextUrl,
       scope: [
@@ -41,14 +49,14 @@ function exportResults (req, res) {
   } catch (e) {
     log.error('Export failed:', e)
     res.status(500).send(`<link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
-    <div aria-live="polite" role="alert" class="alert alert-danger">Smth has gone wrong, try it later.</div>`)
+    <div aria-live="polite" role="alert" class="alert alert-danger">Something has gone wrong, try again later.</div>`)
   }
 }
 
 async function getAccessToken ({ clientId, clientSecret, redirectUri, code }) {
   const auth = await rp({
     method: 'POST',
-    uri: `https://${settings.canvas.host}/login/oauth2/token`,
+    uri: `https://${canvasHost}/login/oauth2/token`,
     body: {
       grant_type: 'authorization_code',
       client_id: clientId,
@@ -178,7 +186,7 @@ function exportResults2 (req, res) {
   } catch (e) {
     log.error('Export failed:', e)
     res.status(500).send(`<link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
-    <div aria-live="polite" role="alert" class="alert alert-danger">Smth has gone wrong, try it later.</div>`)
+    <div aria-live="polite" role="alert" class="alert alert-danger">Something has gone wrong, try it later.</div>`)
   }
 }
 
@@ -235,8 +243,8 @@ async function exportResults3 (req, res) {
 
   try {
     accessToken = await getAccessToken({
-      clientId: settings.canvas.clientId,
-      clientSecret: settings.canvas.clientSecret,
+      clientId: process.env.CANVAS_CLIENT_ID,
+      clientSecret: process.env.CANVAS_CLIENT_SECRET,
       redirectUri: req.protocol + '://' + req.get('host') + req.originalUrl,
       code: req.query.code
     })

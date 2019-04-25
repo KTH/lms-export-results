@@ -33,7 +33,6 @@ async function getSubmissions ({ canvasCourseId, sections, canvasApi }) {
   for await (const submission of canvasApi.list(url, qsParams)) {
     submissions.push(submission)
   }
-
   return students.map(student => ({ ...student, submissions: submissions.filter(sub => sub.user_id === student.user_id) }))
 }
 module.exports = { getSubmissions }
