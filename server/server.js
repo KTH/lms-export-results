@@ -1,6 +1,6 @@
 'use strict'
 const server = require('kth-node-server')
-const prefix = process.env.PROXY_BASE || ''
+const prefix = '/api/lms-export-results'
 
 /* *******************************
  * *******KTH STYLE *******
