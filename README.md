@@ -2,6 +2,9 @@
 
 Canvas External Tool for downloading a CSV file that contains grades of a specific Canvas Course.
 
+This tool exports to file, there is also
+[a tool that exports directly to Ladok](https://github.com/KTH/lms-export-to-ladok).
+
 ## Getting started
 
 1. You need a Developer Key and Secret from Canvas. Get it following these instructions: https://community.canvaslms.com/docs/DOC-12657-4214441833
