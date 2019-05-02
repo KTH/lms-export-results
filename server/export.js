@@ -219,7 +219,7 @@ function getCustomColumnHeaders (customColumns) {
 }
 
 async function exportResults3 (req, res) {
-  req.setTimeout && req.setTimeout(25 * 60 * 1000)
+  req.setTimeout && req.setTimeout(10 * 60 * 1000)
   const correlationId = req.query.correlationId || req.id
   const courseRound = req.query.courseRound
   const fileName = `${courseRound || 'canvas'}-${moment().format('YYYYMMDD-HHMMSS')}-results.csv`
