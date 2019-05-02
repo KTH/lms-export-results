@@ -1,6 +1,4 @@
-// This code reduces the array of sections containing arrays or students into one student array. It also makes sure each student
-// only occurs once.
-function extractStudentsFromSections (sections) {
+function extractUniqueStudentsAndSectionNamesFromSections (sections) {
   return sections.reduce((accumulatedSectionStudents, currentSection, currentIndex, sectionsSource) => {
     if (!currentSection.students) {
       currentSection.students = []
@@ -31,7 +29,7 @@ function extractStudentsFromSections (sections) {
 }
 
 async function getSubmissions ({ canvasCourseId, sections, canvasApi, log }) {
-  const studentsFromSections = extractStudentsFromSections(sections)
+  const studentsFromSections = extractUniqueStudentsAndSectionNamesFromSections(sections)
   const submissions = await canvasApi.get(`courses/${canvasCourseId}/students/submissions?student_ids[]=all&order=id&order_direction=ascending&per_page=100`)
   const studentsWithSubmissions = studentsFromSections.map(student => ({ ...student, submissions: submissions.filter(sub => sub.user_id === student.user_id) }))
 

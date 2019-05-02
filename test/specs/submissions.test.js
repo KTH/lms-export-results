@@ -2,48 +2,7 @@ const test = require('tape')
 const rewire = require('rewire')
 const _export = rewire('../../server/submissions')
 
-const extractStudentsFromSections = _export.__get__('extractStudentsFromSections')
-const userA = {
-  id: 2,
-  sis_user_id: 'SHEL93921',
-  sis_import_id: 16
-}
-const userB = {
-  id: 4,
-  sis_user_id: 'SHEL93922',
-  sis_import_id: 4
-}
-const userC = {
-  id: 8,
-  sis_user_id: 'SHEL93923',
-  sis_import_id: 1
-}
-const userD = {
-  id: 16,
-  sis_user_id: 'SHEL93924',
-  sis_import_id: 3
-}
-const userE = {
-  id: 32,
-  sis_user_id: 'SHEL93925',
-  sis_import_id: 9
-}
-const emptySectionTemplateA = {
-  name: 'Section A',
-  students: null
-}
-const emptySectionTemplateB = {
-  name: 'Section B',
-  students: null
-}
-const sectionTemplateA = {
-  name: 'Section C',
-  students: [userA, userB]
-}
-const sectionTemplateB = {
-  name: 'Section D',
-  students: [userC, userD, userE]
-}
+const extractStudentsFromSections = _export.__get__('extractUniqueStudentsAndSectionNamesFromSections')
 
 const emptySections1 = []
 const emptySectionsResult1 = []

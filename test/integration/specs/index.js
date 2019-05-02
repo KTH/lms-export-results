@@ -1,5 +1,5 @@
 const test = require('tape')
-require('dotenv').config({path: 'test/.env'})
+require('dotenv').config({ path: 'test/.env' })
 const randomstring = require('randomstring')
 
 const webdriver = require('selenium-webdriver')
@@ -26,9 +26,9 @@ rimraf(folderName)
 let options = new firefox.Options().setProfile(profile)
 
 const driver = new webdriver.Builder()
-    .forBrowser('firefox')
-    .setFirefoxOptions(options)
-    .build()
+  .forBrowser('firefox')
+  .setFirefoxOptions(options)
+  .build()
 
 async function createCanvasCourse () {
   const courseCode = 'A' + randomstring.generate(5)
@@ -39,18 +39,18 @@ async function createCanvasCourse () {
   }
 
   const accountId = 14 // Courses that starts with an 'A' is handled by account 14
-  const canvasCourse = await canvasApi.createCourse({course}, accountId)
+  const canvasCourse = await canvasApi.createCourse({ course }, accountId)
   await canvasApi.createDefaultSection(canvasCourse)
   return canvasCourse
 }
 
-async function prepareCourse(course){
+async function prepareCourse (course) {
   // Enroll the test user, 56313, as a teacher
   // Enroll some students
   return result
 }
 
-async function setupCourse(){
+async function setupCourse () {
   return await prepareCourse(await createCanvasCourse())
 }
 
@@ -68,7 +68,7 @@ test(`should write a file
     // TODO: should set the timeout to somethinge shorter, since we want it to timeout. But preferably sooner.
     await driver.findElement(By.css('input[type="submit"]')).click()
   } catch (e) {
-    console.log('timeout. This is good, now check file content...', )
+    console.log('timeout. This is good, now check file content...')
   }
 
   fs.readdirSync(folderName).forEach(file => {

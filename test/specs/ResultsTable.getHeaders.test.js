@@ -13,7 +13,7 @@ ResultsTable.__set__('rp', () => ({
 }))
 
 test('"getHeaders()" should not work if "preload()" is not called before', async t => {
-  const file = await ResultsTable.create('canvas_course_id', {log, oauth: {}})
+  const file = await ResultsTable.create('canvas_course_id', { log, oauth: {} })
 
   try {
     file.getHeaders()
@@ -30,7 +30,7 @@ test('"getHeaders()" should return 7 fixed headers when preload()-ed data is emp
     }
   })
 
-  const file = await ResultsTable.create('canvas_course_id', {log, oauth: {}})
+  const file = await ResultsTable.create('canvas_course_id', { log, oauth: {} })
 
   await file.preload()
   const expectedHeaders = [
@@ -54,7 +54,7 @@ test('"getHeaders()" should return 9 headers when data is one assignment (7 fixe
   class FakeCanvasApi {
     get (url) {
       if (url.includes('assignments')) {
-        return [{id: ASSIGNMENT_ID, name: ASSIGNMENT_NAME}]
+        return [{ id: ASSIGNMENT_ID, name: ASSIGNMENT_NAME }]
       } else {
         return []
       }
@@ -62,7 +62,7 @@ test('"getHeaders()" should return 9 headers when data is one assignment (7 fixe
   }
 
   ResultsTable.__set__('CanvasApi', FakeCanvasApi)
-  const file = await ResultsTable.create('canvas_course_id', {log, oauth: {}})
+  const file = await ResultsTable.create('canvas_course_id', { log, oauth: {} })
 
   await file.preload()
 
@@ -82,10 +82,10 @@ test('"getHeaders()" should return 9 headers when data is one assignment (7 fixe
 
 test('"getHeaders()" returns 15 headers when data are four assignment (7 fixed + 2 per assignment)', async t => {
   const assignments = [
-    {id: 'a1', name: 'a1name'},
-    {id: 'a2', name: 'a2name'},
-    {id: 'a3', name: 'a3name'},
-    {id: 'a4', name: 'a4name'},
+    { id: 'a1', name: 'a1name' },
+    { id: 'a2', name: 'a2name' },
+    { id: 'a3', name: 'a3name' },
+    { id: 'a4', name: 'a4name' }
   ]
   // A CanvasApi that returns always empty arrays
   class FakeCanvasApi {
@@ -99,7 +99,7 @@ test('"getHeaders()" returns 15 headers when data are four assignment (7 fixed +
   }
 
   ResultsTable.__set__('CanvasApi', FakeCanvasApi)
-  const file = await ResultsTable.create('canvas_course_id', {log, oauth: {}})
+  const file = await ResultsTable.create('canvas_course_id', { log, oauth: {} })
 
   await file.preload()
 
@@ -109,7 +109,7 @@ test('"getHeaders()" returns 15 headers when data are four assignment (7 fixed +
 
   assignments.forEach((a, index) => {
     t.ok(headers[7 + index * 2].includes(a.id), `header ${7 + index * 2} should contain the ID of the assignment`)
-    t.ok(headers[7 + index * 2 + 1].includes(a.id),   `header ${7 + index * 2 + 1} should contain the ID of the assignment`)
+    t.ok(headers[7 + index * 2 + 1].includes(a.id), `header ${7 + index * 2 + 1} should contain the ID of the assignment`)
   })
 
   assignments.forEach((a, index) => {
@@ -119,9 +119,9 @@ test('"getHeaders()" returns 15 headers when data are four assignment (7 fixed +
 
   headers.slice(7).forEach((header, i) => {
     if (i % 2 === 0) {
-      t.ok(header.includes('submission date'), `header ${i+7} should contain "submission date"`)
+      t.ok(header.includes('submission date'), `header ${i + 7} should contain "submission date"`)
     } else {
-      t.ok(header.includes('grade'), `header ${i+7} should contain "grade"`)
+      t.ok(header.includes('grade'), `header ${i + 7} should contain "grade"`)
     }
   })
 
@@ -132,9 +132,9 @@ test('"getHeaders() returns 10 headers when data are 1 assignment + 1 custom col
   class FakeCanvasApi {
     get (url) {
       if (url.includes('assignments')) {
-        return [{id: 'a1', name: 'a1name'}]
+        return [{ id: 'a1', name: 'a1name' }]
       } else if (url.includes('custom_gradebook_columns') && !url.includes('data')) {
-        return [{position: 0, title: 'custom column 1'}]
+        return [{ position: 0, title: 'custom column 1' }]
       } else {
         return []
       }
@@ -142,7 +142,7 @@ test('"getHeaders() returns 10 headers when data are 1 assignment + 1 custom col
   }
 
   ResultsTable.__set__('CanvasApi', FakeCanvasApi)
-  const file = await ResultsTable.create('canvas_course_id', {log, oauth: {}})
+  const file = await ResultsTable.create('canvas_course_id', { log, oauth: {} })
 
   await file.preload()
 
@@ -158,9 +158,9 @@ test('"getHeaders() returns custom columns sorted by "position" in Canvas', asyn
     get (url) {
       if (url.includes('custom_gradebook_columns') && !url.includes('data')) {
         return [
-          {position: 2, title: 'custom column 2'},
-          {position: 0, title: 'custom column 0'},
-          {position: 1, title: 'custom column 1'}
+          { position: 2, title: 'custom column 2' },
+          { position: 0, title: 'custom column 0' },
+          { position: 1, title: 'custom column 1' }
         ]
       } else {
         return []
@@ -169,7 +169,7 @@ test('"getHeaders() returns custom columns sorted by "position" in Canvas', asyn
   }
 
   ResultsTable.__set__('CanvasApi', FakeCanvasApi)
-  const file = await ResultsTable.create('canvas_course_id', {log, oauth: {}})
+  const file = await ResultsTable.create('canvas_course_id', { log, oauth: {} })
 
   await file.preload()
 
