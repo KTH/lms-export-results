@@ -103,7 +103,7 @@ async function createFixedColumnsContent ({ student, ldapClient, section, canvas
   return [
     student.sis_user_id || '',
     student.user_id || '',
-    section.name || '',
+    student.section_names || '',
     row.givenName || (canvasUser && canvasUser.name) || '', // Prefer name from ldap, but if it doesn't exist, use the name in Canvas.
     row.surname || '',
     `="${row.personnummer || ''}"`,
@@ -131,10 +131,10 @@ function createSubmissionLineContent ({ student, assignmentIds }) {
   }))
 }
 
-async function createCsvLineContent ({ student, ldapClient, assignmentIds, section, canvasUser, customColumns, customColumnsData }, { log = defaultLog } = {}) {
-  const fixedColumnsContent = await createFixedColumnsContent({ student, ldapClient, assignmentIds, section, canvasUser }, { log })
+async function createCsvLineContent ({ student, ldapClient, assignmentIds, canvasUser, customColumns, customColumnsData }, { log = defaultLog } = {}) {
+  const fixedColumnsContent = await createFixedColumnsContent({ student, ldapClient, assignmentIds, canvasUser }, { log })
   const customColumnsContent = createCustomColumnsContent({ customColumnsData, customColumns })
-  const assignmentsColumnsContent = createSubmissionLineContent({ student, ldapClient, assignmentIds, section, canvasUser })
+  const assignmentsColumnsContent = createSubmissionLineContent({ student, ldapClient, assignmentIds, canvasUser })
 
   return [
     ...fixedColumnsContent,
@@ -218,17 +218,8 @@ function getCustomColumnHeaders (customColumns) {
   return _.orderBy(customColumns, ['position'], ['asc']).map(c => c.title)
 }
 
-function findDuplicates (data) {
-  return data.reduce((accumulator, value, index, array) => {
-    if (array.indexOf(value) !== index && accumulator.indexOf(value) < 0) {
-      accumulator.push(value)
-    }
-    return accumulator
-  }, [])
-}
-
 async function exportResults3 (req, res) {
-  req.setTimeout && req.setTimeout(25 * 60 * 1000)
+  req.setTimeout && req.setTimeout(10 * 60 * 1000)
   const correlationId = req.query.correlationId || req.id
   const courseRound = req.query.courseRound
   const fileName = `${courseRound || 'canvas'}-${moment().format('YYYYMMDD-HHMMSS')}-results.csv`
@@ -303,19 +294,16 @@ async function exportResults3 (req, res) {
     const usersInCourse = await canvasApi.get(`courses/${canvasCourseId}/users?enrollment_type[]=student&per_page=100`)
 
     const sections = await canvasApi.get(`courses/${canvasCourseId}/sections?include[]=students`)
-    const students = await getSubmissions({ canvasCourseId, sections, canvasApi })
+    const students = await getSubmissions({ canvasCourseId, sections, canvasApi, log })
 
     for (let student of students) {
       try {
-        const section = sections.find(section => section.id === student.section_id)
-
         const canvasUser = usersInCourse.find(u => u.id === student.user_id)
         const customColumnsData = getCustomColumnsData(student.user_id)
         const csvLine = await createCsvLineContent({
           student,
           ldapClient,
           assignmentIds,
-          section,
           canvasUser,
           customColumns,
           customColumnsData
@@ -343,13 +331,9 @@ async function exportResults3 (req, res) {
     // Instead of writing a status:500, write an error in the file. Otherwise the browser will think that the download is finished.
     res.write('An error occured when exporting. Something is probably missing in this file.')
   }
-  if (findDuplicates(aggregatedData).length) {
-    res.write('"⚠ An error occured and some users are probably missing from this file. We are really sorry for this, and are currently working on solving the cause of the error. Please try again, it should work if you try a second time."')
-    log.warn('Sent an error message to the user.')
-  }
+
   log.info('Finish the response and close ldap client.')
   res.send()
-  log.info(`Number of duplicated found for round ${courseRound} of course ${canvasCourseId}: ${findDuplicates(aggregatedData).length}`)
 }
 
 module.exports = {

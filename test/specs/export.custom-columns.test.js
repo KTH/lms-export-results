@@ -8,7 +8,7 @@ const getCustomColumnsFn = _export.__get__('getCustomColumnsFn')
 test('should return a function with user_id as argument, and the column data as return value', async t => {
   const userId = 123456
   const canvasCourseId = 0
-  const canvasApi = {get: sinon.stub()}
+  const canvasApi = { get: sinon.stub() }
   const canvasApiUrl = ''
   const columnId = 1
   const columnId2 = 2
@@ -49,7 +49,7 @@ test('should return a function with user_id as argument, and the column data as 
     ]
   )
 
-  const {getCustomColumnsData} = await getCustomColumnsFn({canvasApi, canvasCourseId, canvasApiUrl})
+  const { getCustomColumnsData } = await getCustomColumnsFn({ canvasApi, canvasCourseId, canvasApiUrl })
   const result = getCustomColumnsData(userId)
   const expected = {
     [columnId]: 'en anteckning...',
@@ -83,7 +83,7 @@ test(`should sort the custom column headers by position`, t => {
 test(`should return an array with the custom columns data,
   or empty string if no data exists,
   sorted by custom columns position`, t => {
-  const customColumnsData = {184: 'en anteckning...'}
+  const customColumnsData = { 184: 'en anteckning...' }
   const customColumns = [
     {
       id: 185,
@@ -99,7 +99,7 @@ test(`should return an array with the custom columns data,
       hidden: false
     }]
   const createCustomColumnsContent = _export.__get__('createCustomColumnsContent')
-  const result = createCustomColumnsContent({customColumns, customColumnsData})
+  const result = createCustomColumnsContent({ customColumns, customColumnsData })
   t.deepEqual(result, ['en anteckning...', ''])
   t.end()
 })
@@ -108,9 +108,9 @@ test(`should return a function with user_id as argument,
   and an object as result
   if the user has no data for the custom columns
   `, async t => {
-  const userId = 123, userId2 = 456
+  const userId = 123; const userId2 = 456
   const canvasCourseId = 0
-  const canvasApi = {get: sinon.stub()}
+  const canvasApi = { get: sinon.stub() }
   const canvasApiUrl = ''
   const columnId = 1
 
@@ -130,7 +130,7 @@ test(`should return a function with user_id as argument,
     []
   )
 
-  const {getCustomColumnsData} = await getCustomColumnsFn({canvasApi, canvasCourseId, canvasApiUrl})
+  const { getCustomColumnsData } = await getCustomColumnsFn({ canvasApi, canvasCourseId, canvasApiUrl })
   const result = getCustomColumnsData(userId2)
   const expected = {}
   t.deepEqual(result, expected)

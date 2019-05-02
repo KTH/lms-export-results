@@ -26,7 +26,7 @@ test('"iterateLines()" with 0 students should finish without calling the callbac
   ResultsTable.__set__('ldap.getBoundClient', () => ldapClientMock)
   ResultsTable.__set__('CanvasApi', CanvasApiMock)
 
-  const file = await ResultsTable.create('canvas_course_id', {log, oauth: {}})
+  const file = await ResultsTable.create('canvas_course_id', { log, oauth: {} })
 
   await file.iterateRows(() => {
     t.fail('the callback was called')
@@ -48,7 +48,7 @@ test('"iterateLines()" with 1 student should throw an error if preload() was not
         }
       } else if (url.includes('students/submissions')) {
         await cb([
-          {id: '1'}
+          { id: '1' }
         ])
       } else {
         return []
@@ -59,7 +59,7 @@ test('"iterateLines()" with 1 student should throw an error if preload() was not
   ResultsTable.__set__('ldap.getBoundClient', () => ldapClientMock)
   ResultsTable.__set__('CanvasApi', CanvasApiMock)
 
-  const file = await ResultsTable.create('canvas_course_id', {log, oauth: {}})
+  const file = await ResultsTable.create('canvas_course_id', { log, oauth: {} })
 
   try {
     await file.iterateRows(() => {
@@ -74,7 +74,7 @@ test('"iterateLines()" with 1 student should throw an error if preload() was not
 
 test('"iterateLines()" should work normally', async t => {
   const ldapMock = {
-    getBoundClient() {
+    getBoundClient () {
       return {
         unbind: () => {}
       }
@@ -94,22 +94,22 @@ test('"iterateLines()" should work normally', async t => {
     async get (url, cb) {
       if (url.includes('courses/canvas_course_id/assignments')) {
         return [
-          {name: 'Assignment 1', id: 'a1'},
-          {name: 'Assignment 2', id: 'a2'}
+          { name: 'Assignment 1', id: 'a1' },
+          { name: 'Assignment 2', id: 'a2' }
         ]
       } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student_view')) {
         return []
       } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student')) {
         return [
-          {name: 'John', id: 'u1', login_id: 'john@example.com'}
+          { name: 'John', id: 'u1', login_id: 'john@example.com' }
         ]
       } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns/cc1/data')) {
         return [
-          {user_id: 'u1', content: 'CC content'}
+          { user_id: 'u1', content: 'CC content' }
         ]
       } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns')) {
         return [
-          {title: 'CC 1', id: 'cc1', position: 0}
+          { title: 'CC 1', id: 'cc1', position: 0 }
         ]
       } else if (url.includes('courses/canvas_course_id/students/submissions')) {
         return cb([{
@@ -117,8 +117,8 @@ test('"iterateLines()" should work normally', async t => {
           sis_user_id: 'sis1',
           section_id: 'section1',
           submissions: [
-            {assignment_id: 'a1', submitted_at: 'SUBMISSION-1', entered_grade: 'pass1'},
-            {assignment_id: 'a2', submitted_at: 'SUBMISSION-2', entered_grade: 'pass2'}
+            { assignment_id: 'a1', submitted_at: 'SUBMISSION-1', entered_grade: 'pass1' },
+            { assignment_id: 'a2', submitted_at: 'SUBMISSION-2', entered_grade: 'pass2' }
           ]
         }])
       }
@@ -126,7 +126,7 @@ test('"iterateLines()" should work normally', async t => {
 
     async requestUrl (url) {
       if (url.includes('sections/section1')) {
-        return {name: 'Section 1'}
+        return { name: 'Section 1' }
       }
     }
   }
@@ -134,7 +134,7 @@ test('"iterateLines()" should work normally', async t => {
   ResultsTable.__set__('ldap', ldapMock)
   ResultsTable.__set__('CanvasApi', CanvasApiMock)
 
-  const file = await ResultsTable.create('canvas_course_id', {log, oauth: {}})
+  const file = await ResultsTable.create('canvas_course_id', { log, oauth: {} })
 
   await file.preload()
 
@@ -152,7 +152,7 @@ test('"iterateLines()" should work normally', async t => {
 
 test('"iterateLines()" should work even if some fields are missing', async t => {
   const ldapMock = {
-    getBoundClient() {
+    getBoundClient () {
       return {
         unbind: () => {}
       }
@@ -164,21 +164,21 @@ test('"iterateLines()" should work even if some fields are missing', async t => 
     async get (url, cb) {
       if (url.includes('courses/canvas_course_id/assignments')) {
         return [
-          {name: 'Assignment 1', id: 'a1'},
+          { name: 'Assignment 1', id: 'a1' }
         ]
       } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student_view')) {
         return []
       } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student')) {
         return [
-          {name: 'John', id: 'u1', login_id: 'john@example.com'}
+          { name: 'John', id: 'u1', login_id: 'john@example.com' }
         ]
       } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns/cc1/data')) {
         return [
-          {user_id: 'u1', content: 'CC content'}
+          { user_id: 'u1', content: 'CC content' }
         ]
       } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns')) {
         return [
-          {title: 'CC 1', id: 'cc1', position: 0}
+          { title: 'CC 1', id: 'cc1', position: 0 }
         ]
       } else if (url.includes('courses/canvas_course_id/students/submissions')) {
         return cb([{
@@ -200,7 +200,7 @@ test('"iterateLines()" should work even if some fields are missing', async t => 
   ResultsTable.__set__('ldap', ldapMock)
   ResultsTable.__set__('CanvasApi', CanvasApiMock)
 
-  const file = await ResultsTable.create('canvas_course_id', {log, oauth: {}})
+  const file = await ResultsTable.create('canvas_course_id', { log, oauth: {} })
 
   await file.preload()
 
@@ -217,7 +217,7 @@ test('"iterateLines()" should work even if some fields are missing', async t => 
 
 test('returned assignments should be in the right order', async t => {
   const ldapMock = {
-    getBoundClient() {
+    getBoundClient () {
       return {
         unbind: () => {}
       }
@@ -243,15 +243,15 @@ test('returned assignments should be in the right order', async t => {
     async get (url, cb) {
       if (url.includes('courses/canvas_course_id/assignments')) {
         return [
-          {name: 'Assignment 1', id: 'a1'},
-          {name: 'Assignment 2', id: 'a2'}
+          { name: 'Assignment 1', id: 'a1' },
+          { name: 'Assignment 2', id: 'a2' }
         ]
       } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student_view')) {
         return []
       } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student')) {
         return [
-          {name: 'John', id: 'u1', login_id: 'john@example.com'},
-          {name: 'Anna', id: 'u2', login_id: 'anna@example.com'}
+          { name: 'John', id: 'u1', login_id: 'john@example.com' },
+          { name: 'Anna', id: 'u2', login_id: 'anna@example.com' }
         ]
       } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns/cc1/data')) {
         return []
@@ -264,7 +264,7 @@ test('returned assignments should be in the right order', async t => {
             sis_user_id: 'sis1',
             section_id: 'section1',
             submissions: [
-              {assignment_id: 'a2', submitted_at: 'SUBMISSION-1-2', entered_grade: 'pass1-2'}
+              { assignment_id: 'a2', submitted_at: 'SUBMISSION-1-2', entered_grade: 'pass1-2' }
             ]
           },
           {
@@ -272,8 +272,8 @@ test('returned assignments should be in the right order', async t => {
             sis_user_id: 'sis2',
             section_id: 'section1',
             submissions: [
-              {assignment_id: 'a1', submitted_at: 'SUBMISSION-2-1', entered_grade: 'pass2-1'},
-              {assignment_id: 'a2', submitted_at: 'SUBMISSION-2-2', entered_grade: 'pass2-2'}
+              { assignment_id: 'a1', submitted_at: 'SUBMISSION-2-1', entered_grade: 'pass2-1' },
+              { assignment_id: 'a2', submitted_at: 'SUBMISSION-2-2', entered_grade: 'pass2-2' }
             ]
           }
         ])
@@ -282,7 +282,7 @@ test('returned assignments should be in the right order', async t => {
 
     async requestUrl (url) {
       if (url.includes('sections/section1')) {
-        return {name: 'Section 1'}
+        return { name: 'Section 1' }
       }
     }
   }
@@ -290,7 +290,7 @@ test('returned assignments should be in the right order', async t => {
   ResultsTable.__set__('ldap', ldapMock)
   ResultsTable.__set__('CanvasApi', CanvasApiMock)
 
-  const file = await ResultsTable.create('canvas_course_id', {log, oauth: {}})
+  const file = await ResultsTable.create('canvas_course_id', { log, oauth: {} })
 
   await file.preload()
   const body = []
