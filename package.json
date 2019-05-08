@@ -10,7 +10,7 @@
     "standard": "standard",
     "start-dev": "nodemon app.js",
     "test:docker-unit": "apk update; apk add python make; npm install --no-optional; npm test",
-    "test:standard:docker-unit": "apk update; apk add python make; npm install --no-optional; npm test; npm standard;",
+    "test:standard:docker-unit": "apk update; apk add python make; npm install --no-optional; npm test; npm run standard;",
     "test:standard": "standard && tape \"test/specs/*.test.js\" | tap-spec",
     "install-and-test": "npm install && npm test --verbose",
     "debug": "NODE_ENV=development node --nolazy --inspect-brk=9229 app.js | bunyan -o short"
