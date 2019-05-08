@@ -26,4 +26,4 @@ services:
     # This example runs test in package.json which is
     # part of the kth-azure-app image.
     tty: true
-    command: npm install && npm test
+    command: npm run install-and-test
