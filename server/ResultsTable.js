@@ -140,12 +140,13 @@ module.exports.create = async function createResultsFile (courseId, options) {
               .reduce(flattenReducer, [])
 
             const customColumnsData = await getCustomColumnsData(student.user_id)
-
+            /* eslint-disable */
             callback([
               ...fixedData,
               ...customColumnsData,
               ...assignmentsData // TODO: Replace with array.prototype.flatten() when Node 10!!
             ])
+            /* eslint-enable */
           } catch (e) {
             log.error('Error. Export failed', e)
           }
