@@ -5,11 +5,13 @@
   "main": "app.js",
   "private": true,
   "scripts": {
-    "test": "standard && tape \"test/specs/*.test.js\" | tap-spec",
+    "test": "tape \"test/specs/*.test.js\" | tap-spec",
     "start": "NODE_ENV=production node app.js",
+    "standard": "standard",
     "start-dev": "nodemon app.js",
     "test:docker-unit": "apk update; apk add python make; npm install --no-optional; npm test",
-    "test:standard": "apk update; apk add python make; npm install; npm test --verbose",
+    "test:standard:docker-unit": "apk update; apk add python make; npm install --no-optional; npm test; npm standard;",
+    "test:standard": "standard && tape \"test/specs/*.test.js\" | tap-spec",
     "install-and-test": "npm install && npm test --verbose",
     "debug": "NODE_ENV=development node --nolazy --inspect-brk=9229 app.js | bunyan -o short"
   },
