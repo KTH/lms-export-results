@@ -25,8 +25,8 @@ async function checkLdap ({ log }) {
     if (ldapClient) {
       await ldapClient.unbind((err) => {
         if (err) {
-          log.error('An error occured when unbinding ldap client')
-          log.error(err)
+          // Only log, since these errors are not at all critical. See more: https://ldap.com/the-ldap-unbind-operation/
+          log.info("Couldn't unbind ldap client. This is ok since I'm only unbinding to be polite anyways.", err)
         }
       })
     }
