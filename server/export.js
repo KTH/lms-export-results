@@ -2,7 +2,7 @@
 const defaultLog = require('./log')
 const querystring = require('querystring')
 const { getSubmissions } = require('./submissions')
-const rp = require('request-promise')
+const got = require('got')
 const CanvasApi = require('kth-canvas-api')
 const csv = require('./csvFile')
 const ldap = require('./ldap')
@@ -54,9 +54,9 @@ function exportResults (req, res) {
 }
 
 async function getAccessToken ({ clientId, clientSecret, redirectUri, code }) {
-  const auth = await rp({
+  const { body } = await got({
     method: 'POST',
-    uri: `https://${canvasHost}/login/oauth2/token`,
+    url: `https://${canvasHost}/login/oauth2/token`,
     body: {
       grant_type: 'authorization_code',
       client_id: clientId,
@@ -66,7 +66,7 @@ async function getAccessToken ({ clientId, clientSecret, redirectUri, code }) {
     },
     json: true
   })
-  return auth.access_token
+  return body.access_token
 }
 
 async function getAssignmentIdsAndHeaders ({ canvasApi, canvasCourseId }) {
