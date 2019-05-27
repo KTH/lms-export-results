@@ -2,7 +2,7 @@ const express = require('express')
 const packageFile = require('../package.json')
 const defaultLog = require('./log')
 const ldap = require('./ldap')
-const rp = require('request-promise')
+const got = require('got')
 const version = require('../config/version')
 
 const router = express.Router()
@@ -35,12 +35,11 @@ async function checkLdap ({ log }) {
 
 async function checkIp ({ log }) {
   try {
-    const t = await rp({
-      method: 'GET',
-      uri: 'https://api.ipify.org?format=json',
+    const { body } = await got({
+      url: 'https://api.ipify.org?format=json',
       json: true
     })
-    return { ok: true, msg: t.ip }
+    return { ok: true, msg: body.ip }
   } catch (e) {
     log.error('IP check failed', e)
     return { ok: false, msg: 'failed IP test' }

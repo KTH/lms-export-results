@@ -6,9 +6,11 @@ const log = require('bunyan').createLogger({
   level: 0 // Creates a very noisy logger
 })
 
-ResultsTable.__set__('rp', () => ({
-  auth: {
-    access_token: 'valid_access_token'
+ResultsTable.__set__('got', () => ({
+  body: {
+    auth: {
+      access_token: 'valid_access_token'
+    }
   }
 }))
 

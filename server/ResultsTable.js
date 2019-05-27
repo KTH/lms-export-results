@@ -1,6 +1,6 @@
 const CanvasApi = require('kth-canvas-api')
 const ldap = require('./ldap')
-const rp = require('request-promise')
+const got = require('got')
 
 const flattenReducer = (acc, el) => [...acc, ...el]
 
@@ -10,9 +10,9 @@ module.exports.create = async function createResultsFile (courseId, options) {
   let accessToken
 
   try {
-    const auth = await rp({
+    const { body } = await got({
       method: 'POST',
-      uri: `https://${process.env.CANVAS_HOST}/login/oauth2/token`,
+      url: `https://${process.env.CANVAS_HOST}/login/oauth2/token`,
       body: {
         grant_type: 'authorization_code',
         client_id: process.env.CANVAS_CLIENT_ID,
@@ -23,7 +23,7 @@ module.exports.create = async function createResultsFile (courseId, options) {
       json: true
     })
 
-    accessToken = auth.access_token
+    accessToken = body.access_token
   } catch (e) {
     log.warn('The access token cannot be retrieved from Canvas', e)
     throw e
