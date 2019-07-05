@@ -27,7 +27,7 @@ function exportResults (req, res) {
     // the test canvas.
     const roles = (b.roles || '').split(',')
     if (!roles.includes('Instructor')) {
-      log.warn('Export not allowed to non-instructor. Roles was:', roles)
+      log.warn('Export not allowed to non-instructor. Roles were:', roles)
       res.status(403).send(`<link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
       <div aria-live="polite" role="alert" class="alert alert-danger">Only Instructors (examiners, course-responsibles and teachers) are allowed to export results.</div>`)
       return
