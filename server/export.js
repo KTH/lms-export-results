@@ -19,10 +19,17 @@ function exportResults (req, res) {
     const b = req.body
     log.info(`The user ${b.lis_person_sourcedid}, ${b.custom_canvas_user_login_id}, is exporting the course ${b.context_label} with id ${b.custom_canvas_course_id}`)
 
-    if (b.ext_roles && b.ext_roles.includes('urn:lti:role:ims/lis/TeachingAssistant')) {
-      log.warn('Export failed due to TA access.')
+    // Note use of roles, not ext_roles here.
+    // Checking ext_roles for urn:lti:role:ims/lis/Instructor might also be ok
+    // (but not urn:lti:instrole:ims/lis/Instructor, as that is given to TA:s also).
+    // Also note: We may want to allow urn:lti:instrole:ims/lis/Administrator here,
+    // but 1. I don't know that we want that, and 2. that role is required to even log in to
+    // the test canvas.
+    const roles = (b.roles || '').split(',')
+    if (!roles.includes('Instructor')) {
+      log.warn('Export not allowed to non-instructor. Roles was:', roles)
       res.status(403).send(`<link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
-      <div aria-live="polite" role="alert" class="alert alert-danger">Teaching assistants are not allowed to export results.</div>`)
+      <div aria-live="polite" role="alert" class="alert alert-danger">Only Instructors (examiners, course-responsibles and teachers) are allowed to export results.</div>`)
       return
     }
 

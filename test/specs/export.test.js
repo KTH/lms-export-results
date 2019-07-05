@@ -25,7 +25,7 @@ const exportResults3 = _export.__get__('exportResults3')
 
 test('should redirect to the Canvas authentication page', t => {
   const res = { redirect: sinon.spy() }
-  const req = { body: {}, get: () => '' }
+  const req = { body: {roles: 'Instructor'}, get: () => '' }
 
   exportResults(req, res)
 
@@ -37,7 +37,7 @@ test('should send status:500 if exportResults breaks', t => {
   const res = { status: sinon.stub().returns({
     send () {}
   }) }
-  const req = { body: {},
+  const req = { body: {roles: 'Instructor'},
     get: () => {
       throw new Error('Just pretending that something breaks...')
     } }
