@@ -10,6 +10,7 @@ const moment = require('moment')
 const _ = require('lodash')
 const canvasHost = process.env.CANVAS_HOST || 'kth.test.instructure.com'
 const canvasApiUrl = `https://${canvasHost}/api/v1`
+const isAllowed = require('./isAllowed')
 
 function exportResults (req, res) {
   const correlationId = req.id
@@ -18,20 +19,6 @@ function exportResults (req, res) {
   try {
     const b = req.body
     log.info(`The user ${b.lis_person_sourcedid}, ${b.custom_canvas_user_login_id}, is exporting the course ${b.context_label} with id ${b.custom_canvas_course_id}`)
-
-    // Note use of roles, not ext_roles here.
-    // Checking ext_roles for urn:lti:role:ims/lis/Instructor might also be ok
-    // (but not urn:lti:instrole:ims/lis/Instructor, as that is given to TA:s also).
-    // Also note: We may want to allow urn:lti:instrole:ims/lis/Administrator here,
-    // but 1. I don't know that we want that, and 2. that role is required to even log in to
-    // the test canvas.
-    const roles = (b.roles || '').split(',')
-    if (!roles.includes('Instructor')) {
-      log.warn('Export not allowed to non-instructor. Roles were:', roles)
-      res.status(403).send(`<link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
-      <div aria-live="polite" role="alert" class="alert alert-danger">Only Instructors (examiners, course-responsibles and teachers) are allowed to export results.</div>`)
-      return
-    }
 
     let courseRound = b.lis_course_offering_sourcedid
     const canvasCourseId = b.custom_canvas_course_id
@@ -260,21 +247,29 @@ async function exportResults3 (req, res) {
     return
   }
 
-  // Start writing response as soon as possible
-  res.set({
-    'content-type': 'text/csv; charset=utf-8',
-    'location': 'http://www.kth.se'
-  })
-  res.attachment(fileName)
-  // Write BOM https://sv.wikipedia.org/wiki/Byte_order_mark
-  res.write('\uFEFF')
-
   try {
     const canvasApi = new CanvasApi(canvasApiUrl, accessToken)
     canvasApi.logger = log
 
+    const allowed = await isAllowed(canvasApi, canvasCourseId)
+    if (!allowed) {
+      log.warn('Export only allowed for teachers, course responsible and examiners.')
+      res.status(403).send(`<link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
+      <div aria-live="polite" role="alert" class="alert alert-danger">Only examiners, course responsible and teachers are allowed to export results.</div>`)
+      return
+    }
+
     const ldapClient = await ldap.getBoundClient({ log })
     ldap.logger = log
+
+    // Start writing response as soon as possible
+    res.set({
+      'content-type': 'text/csv; charset=utf-8',
+      'location': 'http://www.kth.se'
+    })
+    res.attachment(fileName)
+    // Write BOM https://sv.wikipedia.org/wiki/Byte_order_mark
+    res.write('\uFEFF')
 
     // So far so good, start constructing the output
     const { assignmentIds, headers } = await getAssignmentIdsAndHeaders({ canvasApi, canvasCourseId })
