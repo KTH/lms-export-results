@@ -89,7 +89,7 @@ async function createFixedColumnsContent ({ student, ldapClient, section, canvas
       personnummer: personnummer && (personnummer.length === 12 ? personnummer.slice(2) : personnummer)
     }
   } catch (err) {
-    log.error('An error occured while trying to find user in ldap:', err)
+    log.error(`An error occured while trying to find user ${student.sis_user_id} in ldap`, err)
     log.info('No user from ldap, use empty row instead')
     row = {}
   }
@@ -259,9 +259,6 @@ async function exportResults3 (req, res) {
       return
     }
 
-    const ldapClient = await ldap.getBoundClient({ log })
-    ldap.logger = log
-
     // Start writing response as soon as possible
     res.set({
       'content-type': 'text/csv; charset=utf-8',
@@ -299,7 +296,10 @@ async function exportResults3 (req, res) {
     const students = await getSubmissions({ canvasCourseId, sections, canvasApi, log })
 
     for (let student of students) {
+      let ldapClient
       try {
+        ldapClient = await ldap.getBoundClient({ log })
+        ldap.logger = log
         const canvasUser = usersInCourse.find(u => u.id === student.user_id)
         const customColumnsData = getCustomColumnsData(student.user_id)
         const csvLine = await createCsvLineContent({
@@ -319,15 +319,17 @@ async function exportResults3 (req, res) {
         log.error(`Export failed: `, e)
         // Instead of writing a status:500, write an error in the file. Otherwise the browser will think that the download is finished.
         res.write('An error occured when exporting a student. Something is probably missing in this file.')
+      } finally {
+        if (ldapClient) {
+          ldapClient.unbind((err) => {
+            if (err) {
+              // Only log, since these errors are not at all critical. See more: https://ldap.com/the-ldap-unbind-operation/
+              log.info("Couldn't unbind ldap client. This is ok since I'm only unbinding to be polite anyways.", err)
+            }
+          })
+        }
       }
     }
-
-    ldapClient.unbind((err) => {
-      if (err) {
-        // Only log, since these errors are not at all critical. See more: https://ldap.com/the-ldap-unbind-operation/
-        log.info("Couldn't unbind ldap client. This is ok since I'm only unbinding to be polite anyways.", err)
-      }
-    })
   } catch (e) {
     log.error('Export failed for query: ', req.query, e)
     // Instead of writing a status:500, write an error in the file. Otherwise the browser will think that the download is finished.
