@@ -299,7 +299,6 @@ async function exportResults3 (req, res) {
       let ldapClient
       try {
         ldapClient = await ldap.getBoundClient({ log })
-        ldap.logger = log
         const canvasUser = usersInCourse.find(u => u.id === student.user_id)
         const customColumnsData = getCustomColumnsData(student.user_id)
         const csvLine = await createCsvLineContent({
@@ -320,14 +319,7 @@ async function exportResults3 (req, res) {
         // Instead of writing a status:500, write an error in the file. Otherwise the browser will think that the download is finished.
         res.write('An error occured when exporting a student. Something is probably missing in this file.')
       } finally {
-        if (ldapClient) {
-          ldapClient.unbind((err) => {
-            if (err) {
-              // Only log, since these errors are not at all critical. See more: https://ldap.com/the-ldap-unbind-operation/
-              log.info("Couldn't unbind ldap client. This is ok since I'm only unbinding to be polite anyways.", err)
-            }
-          })
-        }
+        await ldapClient.unbind()
       }
     }
   } catch (e) {
