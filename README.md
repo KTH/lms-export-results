@@ -1,9 +1,8 @@
 # LMS Export results
 
-Canvas External Tool for downloading a CSV file that contains grades of a specific Canvas Course.
+Canvas LMS External Tool for downloading a CSV file that contains grades of a specific Canvas Course.
 
-This tool exports to file, there is also
-[a tool that exports directly to Ladok](https://github.com/KTH/lms-export-to-ladok).
+This tool exports to file, there is also [a tool that exports directly to Ladok](https://github.com/KTH/lms-export-to-ladok).
 
 ## Getting started
 
