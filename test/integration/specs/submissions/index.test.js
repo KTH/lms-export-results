@@ -4,7 +4,7 @@ const CanvasApi = require('kth-canvas-api')
 require('dotenv').config()
 const canvasApiUrl = `https://${process.env.CANVAS_HOST}/api/v1`
 
-const canvasApi = new CanvasApi(canvasApiUrl, process.env.CANVAS_TOKEN)
+const canvasApi = new CanvasApi(canvasApiUrl, process.env.CANVAS_API_TOKEN)
 const { getSubmissions } = require('../../../../server/submissions')
 
 // TODO: this isn't really a good integration test, I just used it during the development. I guess we should remove it.

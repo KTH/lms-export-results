@@ -17,6 +17,7 @@
     ]
   },
   "dependencies": {
+    "@kth/reqvars": "^2.0.1",
     "body-parser": "^1.19.0",
     "bootstrap": "^4.3.1",
     "bunyan": "^1.8.12",

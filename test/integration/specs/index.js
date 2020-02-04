@@ -10,7 +10,7 @@ const firefox = require('selenium-webdriver/firefox')
 const CanvasApi = require('kth-canvas-api')
 const folderName = '/tmp/lms-export-results'
 const fs = require('fs')
-const canvasApi = new CanvasApi(process.env.CANVAS_API_URL, process.env.CANVAS_API_KEY)
+const canvasApi = new CanvasApi(process.env.CANVAS_API_URL, process.env.CANVAS_API_TOKEN)
 
 // Set up firefox so that the file will be downloaded in a preferred folder
 let profile = new firefox.Profile()
