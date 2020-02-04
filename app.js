@@ -1,4 +1,5 @@
 require('dotenv').config()
+require('@kth/reqvars').check()
 const server = require('./server/server')
 const log = require('./server/log')
 
