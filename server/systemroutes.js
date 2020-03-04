@@ -14,7 +14,10 @@ async function checkLdap ({ log }) {
     const testUser = await ldap.lookupUser(ldapClient, 'u1famwov', { log })
 
     if (testUser.sn) {
-      return { ok: true, msg: `Could lookup u1famwov (got ${testUser.givenName} ${testUser.sn})` }
+      return {
+        ok: true,
+        msg: `Could lookup u1famwov (got ${testUser.givenName} ${testUser.sn})`
+      }
     } else {
       return { ok: false, msg: 'failed to lookup u1famwov in ldap' }
     }
@@ -23,10 +26,13 @@ async function checkLdap ({ log }) {
     return { ok: false, msg: 'failed to lookup u1famwov in ldap' }
   } finally {
     if (ldapClient) {
-      await ldapClient.unbind((err) => {
+      await ldapClient.unbind(err => {
         if (err) {
           // Only log, since these errors are not at all critical. See more: https://ldap.com/the-ldap-unbind-operation/
-          log.info("Couldn't unbind ldap client. This is ok since I'm only unbinding to be polite anyways.", err)
+          log.info(
+            "Couldn't unbind ldap client. This is ok since I'm only unbinding to be polite anyways.",
+            err
+          )
         }
       })
     }
@@ -63,14 +69,11 @@ function _about (req, res) {
 
 async function _monitor (req, res) {
   const log = req.log || defaultLog
-  const checks = await Promise.all([
-    checkLdap({ log }),
-    checkIp({ log })
-  ])
+  const checks = await Promise.all([checkLdap({ log }), checkIp({ log })])
 
   res.setHeader('Content-Type', 'text/plain')
   res.send(`
-APPLICATION_STATUS: ${checks.every((e) => e.ok) ? 'OK' : 'ERROR'}
+APPLICATION_STATUS: ${checks.every(e => e.ok) ? 'OK' : 'ERROR'}
 
 LDAP: ${checks[0].ok ? 'OK' : 'ERROR'} ${checks[0].msg}
 IP: ${checks[1].ok ? 'OK' : 'ERROR'} ${checks[1].msg}

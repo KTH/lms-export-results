@@ -1,5 +1,6 @@
-FROM node:10-alpine
+FROM node:12-alpine
 
+WORKDIR /app
 # We do this to avoid npm install when we're only changing code
 COPY ["config", "config"]
 COPY ["package.json", "package.json"]

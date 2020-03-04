@@ -3,7 +3,9 @@ const sinon = require('sinon')
 const rewire = require('rewire')
 const _export = rewire('../../server/export')
 const getAssignmentIdsAndHeaders = _export.__get__('getAssignmentIdsAndHeaders')
-const createSubmissionLineContent = _export.__get__('createSubmissionLineContent')
+const createSubmissionLineContent = _export.__get__(
+  'createSubmissionLineContent'
+)
 
 /**
  * Return a canvasApi instance with a mocked "get" function
@@ -11,8 +13,8 @@ const createSubmissionLineContent = _export.__get__('createSubmissionLineContent
 const setupCanvasApi = (canvasCourseId, assignments) => {
   const canvasApi = { get: sinon.stub() }
 
-  canvasApi
-    .get.withArgs(`/courses/${canvasCourseId}/assignments`)
+  canvasApi.get
+    .withArgs(`/courses/${canvasCourseId}/assignments`)
     .returns(assignments)
 
   return canvasApi
@@ -28,9 +30,7 @@ test('should get assignment ids and headers', async t => {
 
   const expected = {
     assignmentIds: ['0'],
-    headers: [
-      'Assignment 1 (0)'
-    ]
+    headers: ['Assignment 1 (0)']
   }
 
   t.deepEqual(result, expected)
@@ -103,11 +103,17 @@ test('createSubmission 2x elements as getAssignmentIds', async t => {
     submissions: []
   }
 
-  const { assignmentIds, headers } = await getAssignmentIdsAndHeaders({ canvasApi, canvasCourseId })
+  const { assignmentIds, headers } = await getAssignmentIdsAndHeaders({
+    canvasApi,
+    canvasCourseId
+  })
   const result = createSubmissionLineContent({ student, assignmentIds })
 
   t.ok(
     Object.keys(headers).length * 2 === result.length,
-    `length of createSubmission:  ${Object.keys(headers).length}; length of getAssignmentIds:  ${result.length}`)
+    `length of createSubmission:  ${
+      Object.keys(headers).length
+    }; length of getAssignmentIds:  ${result.length}`
+  )
   t.end()
 })

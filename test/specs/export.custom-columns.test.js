@@ -14,42 +14,53 @@ test('should return a function with user_id as argument, and the column data as 
   const columnId2 = 2
 
   // Columns
-  canvasApi.get.withArgs(`/courses/${canvasCourseId}/custom_gradebook_columns`).returns([
-    {
-      id: columnId,
-      title: 'Anteckningar',
-      position: 1,
-      teacher_notes: true,
-      hidden: false
-    }, {
-      id: columnId2,
-      title: 'Nån annan kolumn',
-      position: 2,
-      teacher_notes: false,
-      hidden: false
-    }
-  ])
+  canvasApi.get
+    .withArgs(`/courses/${canvasCourseId}/custom_gradebook_columns`)
+    .returns([
+      {
+        id: columnId,
+        title: 'Anteckningar',
+        position: 1,
+        teacher_notes: true,
+        hidden: false
+      },
+      {
+        id: columnId2,
+        title: 'Nån annan kolumn',
+        position: 2,
+        teacher_notes: false,
+        hidden: false
+      }
+    ])
 
   // Column data
-  canvasApi.get.withArgs(`/courses/${canvasCourseId}/custom_gradebook_columns/${columnId}/data`).returns(
-    [
+  canvasApi.get
+    .withArgs(
+      `/courses/${canvasCourseId}/custom_gradebook_columns/${columnId}/data`
+    )
+    .returns([
       {
         content: 'en anteckning...',
         user_id: userId
       }
-    ]
-  )
+    ])
 
-  canvasApi.get.withArgs(`/courses/${canvasCourseId}/custom_gradebook_columns/${columnId2}/data`).returns(
-    [
+  canvasApi.get
+    .withArgs(
+      `/courses/${canvasCourseId}/custom_gradebook_columns/${columnId2}/data`
+    )
+    .returns([
       {
         content: 'Nåt annat data i en kolumn',
         user_id: userId
       }
-    ]
-  )
+    ])
 
-  const { getCustomColumnsData } = await getCustomColumnsFn({ canvasApi, canvasCourseId, canvasApiUrl })
+  const { getCustomColumnsData } = await getCustomColumnsFn({
+    canvasApi,
+    canvasCourseId,
+    canvasApiUrl
+  })
   const result = getCustomColumnsData(userId)
   const expected = {
     [columnId]: 'en anteckning...',
@@ -67,13 +78,15 @@ test(`should sort the custom column headers by position`, t => {
       position: 2,
       teacher_notes: true,
       hidden: false
-    }, {
+    },
+    {
       id: 184,
       title: 'Anteckningar',
       position: 1,
       teacher_notes: true,
       hidden: false
-    }]
+    }
+  ]
   const getCustomColumnHeaders = _export.__get__('getCustomColumnHeaders')
   const result = getCustomColumnHeaders(customColumns)
   t.deepEqual(result, ['Anteckningar', 'Anteckningar 2'])
@@ -91,15 +104,22 @@ test(`should return an array with the custom columns data,
       position: 2,
       teacher_notes: true,
       hidden: false
-    }, {
+    },
+    {
       id: 184,
       title: 'Anteckningar',
       position: 1,
       teacher_notes: true,
       hidden: false
-    }]
-  const createCustomColumnsContent = _export.__get__('createCustomColumnsContent')
-  const result = createCustomColumnsContent({ customColumns, customColumnsData })
+    }
+  ]
+  const createCustomColumnsContent = _export.__get__(
+    'createCustomColumnsContent'
+  )
+  const result = createCustomColumnsContent({
+    customColumns,
+    customColumnsData
+  })
   t.deepEqual(result, ['en anteckning...', ''])
   t.end()
 })
@@ -108,29 +128,38 @@ test(`should return a function with user_id as argument,
   and an object as result
   if the user has no data for the custom columns
   `, async t => {
-  const userId = 123; const userId2 = 456
+  const userId = 123
+  const userId2 = 456
   const canvasCourseId = 0
   const canvasApi = { get: sinon.stub() }
   const canvasApiUrl = ''
   const columnId = 1
 
   // Columns
-  canvasApi.get.withArgs(`/courses/${canvasCourseId}/custom_gradebook_columns`).returns([
-    {
-      id: columnId,
-      title: 'Anteckningar',
-      position: 1,
-      teacher_notes: true,
-      hidden: false
-    }
-  ])
+  canvasApi.get
+    .withArgs(`/courses/${canvasCourseId}/custom_gradebook_columns`)
+    .returns([
+      {
+        id: columnId,
+        title: 'Anteckningar',
+        position: 1,
+        teacher_notes: true,
+        hidden: false
+      }
+    ])
 
   // Column data
-  canvasApi.get.withArgs(`/courses/${canvasCourseId}/custom_gradebook_columns/${columnId}/data`).returns(
-    []
-  )
+  canvasApi.get
+    .withArgs(
+      `/courses/${canvasCourseId}/custom_gradebook_columns/${columnId}/data`
+    )
+    .returns([])
 
-  const { getCustomColumnsData } = await getCustomColumnsFn({ canvasApi, canvasCourseId, canvasApiUrl })
+  const { getCustomColumnsData } = await getCustomColumnsFn({
+    canvasApi,
+    canvasCourseId,
+    canvasApiUrl
+  })
   const result = getCustomColumnsData(userId2)
   const expected = {}
   t.deepEqual(result, expected)

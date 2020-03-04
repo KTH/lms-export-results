@@ -26,11 +26,14 @@ test('"getHeaders()" should not work if "preload()" is not called before', async
 })
 
 test('"getHeaders()" should return 7 fixed headers when preload()-ed data is empty', async t => {
-  ResultsTable.__set__('CanvasApi', class FakeCanvasApi {
-    get (url) {
-      return []
+  ResultsTable.__set__(
+    'CanvasApi',
+    class FakeCanvasApi {
+      get (url) {
+        return []
+      }
     }
-  })
+  )
 
   const file = await ResultsTable.create('canvas_course_id', { log, oauth: {} })
 
@@ -71,14 +74,32 @@ test('"getHeaders()" should return 9 headers when data is one assignment (7 fixe
   const headers = file.getHeaders()
 
   t.equal(headers.length, 9, 'should return 9 headers. No less, no more')
-  t.ok(headers[7].includes(ASSIGNMENT_ID), 'headers should contain the ID of the assignment')
-  t.ok(headers[8].includes(ASSIGNMENT_ID), 'headers should contain the ID of the assignment')
+  t.ok(
+    headers[7].includes(ASSIGNMENT_ID),
+    'headers should contain the ID of the assignment'
+  )
+  t.ok(
+    headers[8].includes(ASSIGNMENT_ID),
+    'headers should contain the ID of the assignment'
+  )
 
-  t.ok(headers[7].includes(ASSIGNMENT_NAME), 'headers should contain the name of the assignment')
-  t.ok(headers[8].includes(ASSIGNMENT_NAME), 'headers should contain the name of the assignment')
+  t.ok(
+    headers[7].includes(ASSIGNMENT_NAME),
+    'headers should contain the name of the assignment'
+  )
+  t.ok(
+    headers[8].includes(ASSIGNMENT_NAME),
+    'headers should contain the name of the assignment'
+  )
 
-  t.ok(headers[7].includes('submission date'), '8th header should contain the words "submission date"')
-  t.ok(headers[8].includes('grade'), '9th header should contain the word "grade"')
+  t.ok(
+    headers[7].includes('submission date'),
+    '8th header should contain the words "submission date"'
+  )
+  t.ok(
+    headers[8].includes('grade'),
+    '9th header should contain the word "grade"'
+  )
   t.end()
 })
 
@@ -107,21 +128,40 @@ test('"getHeaders()" returns 15 headers when data are four assignment (7 fixed +
 
   const headers = file.getHeaders()
 
-  t.equal(headers.length, 15, 'should return exactly 15 headers. No less, no more')
+  t.equal(
+    headers.length,
+    15,
+    'should return exactly 15 headers. No less, no more'
+  )
 
   assignments.forEach((a, index) => {
-    t.ok(headers[7 + index * 2].includes(a.id), `header ${7 + index * 2} should contain the ID of the assignment`)
-    t.ok(headers[7 + index * 2 + 1].includes(a.id), `header ${7 + index * 2 + 1} should contain the ID of the assignment`)
+    t.ok(
+      headers[7 + index * 2].includes(a.id),
+      `header ${7 + index * 2} should contain the ID of the assignment`
+    )
+    t.ok(
+      headers[7 + index * 2 + 1].includes(a.id),
+      `header ${7 + index * 2 + 1} should contain the ID of the assignment`
+    )
   })
 
   assignments.forEach((a, index) => {
-    t.ok(headers[7 + index * 2].includes(a.name), `header ${7 + index * 2} should contain the name of the assignment`)
-    t.ok(headers[7 + index * 2 + 1].includes(a.name), `header ${7 + index * 2 + 1} should contain the name of the assignment`)
+    t.ok(
+      headers[7 + index * 2].includes(a.name),
+      `header ${7 + index * 2} should contain the name of the assignment`
+    )
+    t.ok(
+      headers[7 + index * 2 + 1].includes(a.name),
+      `header ${7 + index * 2 + 1} should contain the name of the assignment`
+    )
   })
 
   headers.slice(7).forEach((header, i) => {
     if (i % 2 === 0) {
-      t.ok(header.includes('submission date'), `header ${i + 7} should contain "submission date"`)
+      t.ok(
+        header.includes('submission date'),
+        `header ${i + 7} should contain "submission date"`
+      )
     } else {
       t.ok(header.includes('grade'), `header ${i + 7} should contain "grade"`)
     }
@@ -135,7 +175,10 @@ test('"getHeaders() returns 10 headers when data are 1 assignment + 1 custom col
     get (url) {
       if (url.includes('assignments')) {
         return [{ id: 'a1', name: 'a1name' }]
-      } else if (url.includes('custom_gradebook_columns') && !url.includes('data')) {
+      } else if (
+        url.includes('custom_gradebook_columns') &&
+        !url.includes('data')
+      ) {
         return [{ position: 0, title: 'custom column 1' }]
       } else {
         return []
@@ -151,7 +194,11 @@ test('"getHeaders() returns 10 headers when data are 1 assignment + 1 custom col
   const headers = file.getHeaders()
 
   t.equal(headers.length, 10, 'should return exactly 10 headers')
-  t.equal(headers[7], 'custom column 1', '8th header should be called "custom column 1"')
+  t.equal(
+    headers[7],
+    'custom column 1',
+    '8th header should be called "custom column 1"'
+  )
   t.end()
 })
 
@@ -177,8 +224,20 @@ test('"getHeaders() returns custom columns sorted by "position" in Canvas', asyn
 
   const headers = file.getHeaders()
 
-  t.equal(headers[7], 'custom column 0', '8th header should be called "custom column 0"')
-  t.equal(headers[8], 'custom column 1', '9th header should be called "custom column 1"')
-  t.equal(headers[9], 'custom column 2', '10th header should be called "custom column 2"')
+  t.equal(
+    headers[7],
+    'custom column 0',
+    '8th header should be called "custom column 0"'
+  )
+  t.equal(
+    headers[8],
+    'custom column 1',
+    '9th header should be called "custom column 1"'
+  )
+  t.equal(
+    headers[9],
+    'custom column 2',
+    '10th header should be called "custom column 2"'
+  )
   t.end()
 })

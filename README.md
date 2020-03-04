@@ -29,7 +29,7 @@ This tool exports to file, there is also [a tool that exports directly to Ladok]
 
 6. Install the dependencies and start the app
 
-   ``` javascript
+   ```javascript
    npm install
    npm start
    ```

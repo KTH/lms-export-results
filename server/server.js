@@ -9,7 +9,10 @@ const prefix = '/api/lms-export-results'
 const path = require('path')
 const express = require('express')
 
-server.use(prefix + '/kth-style', express.static(path.join(__dirname, '../node_modules/kth-style/dist')))
+server.use(
+  prefix + '/kth-style',
+  express.static(path.join(__dirname, '../node_modules/kth-style/dist'))
+)
 
 /* *******************************
  * ******* REQUEST PARSING *******
@@ -41,7 +44,12 @@ server.use((req, res, next) => {
  * **********************************
  */
 
-const { exportResults, exportResults2, exportResults3, exportDone } = require('./export')
+const {
+  exportResults,
+  exportResults2,
+  exportResults3,
+  exportDone
+} = require('./export')
 const systemroutes = require('./systemroutes')
 const exportroutes = require('./exportroutes')
 
@@ -56,7 +64,8 @@ server.get(prefix + '/exportResults3', exportResults3)
 server.get(prefix + '/done', exportDone)
 
 // Temp route
-server.get(prefix + '/test', (req, res) => res.send(`
+server.get(prefix + '/test', (req, res) =>
+  res.send(`
   <html>
   <link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
   <p>TODO: Detta är bara en testsida för att kunna testa hela oath2-flödet i prod. Så fort som produktion funkar ska denna route tas bort.</p>
@@ -65,7 +74,8 @@ server.get(prefix + '/test', (req, res) => res.send(`
     <input type="submit" />
   </form>
   </html>
-  `))
+  `)
+)
 
 // Catch not found and errors
 

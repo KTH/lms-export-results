@@ -25,7 +25,7 @@ const exportResults3 = _export.__get__('exportResults3')
 
 test('should redirect to the Canvas authentication page', t => {
   const res = { redirect: sinon.spy() }
-  const req = { body: {roles: 'Instructor'}, get: () => '' }
+  const req = { body: { roles: 'Instructor' }, get: () => '' }
 
   exportResults(req, res)
 
@@ -34,13 +34,17 @@ test('should redirect to the Canvas authentication page', t => {
 })
 
 test('should send status:500 if exportResults breaks', t => {
-  const res = { status: sinon.stub().returns({
-    send () {}
-  }) }
-  const req = { body: {roles: 'Instructor'},
+  const res = {
+    status: sinon.stub().returns({
+      send () {}
+    })
+  }
+  const req = {
+    body: { roles: 'Instructor' },
     get: () => {
       throw new Error('Just pretending that something breaks...')
-    } }
+    }
+  }
 
   exportResults(req, res)
 
@@ -58,17 +62,22 @@ test(`should write a file
     write: sinon.spy(),
     send () {}
   }
-  const req = { query: { courseRound: 'round', canvasCourseId: 'canvasCourseId' }, get: () => '' }
+  const req = {
+    query: { courseRound: 'round', canvasCourseId: 'canvasCourseId' },
+    get: () => ''
+  }
 
   _export.__set__('getAccessToken', () => 'mocked token')
   _export.__set__('isAllowed', () => true)
   await exportResults3(req, res)
   sinon.assert.calledWith(res.write, '\uFEFF')
-  sinon.assert.calledWith(res.write, sinon.match('SIS User ID;ID;Section;Name;Surname;Personnummer'))
+  sinon.assert.calledWith(
+    res.write,
+    sinon.match('SIS User ID;ID;Section;Name;Surname;Personnummer')
+  )
   t.end()
 })
 
 test.skip(`should write a file
     with personnummer and name for the student
-    if there's one assignment with one submission in the course`, async t => {
-})
+    if there's one assignment with one submission in the course`, async t => {})

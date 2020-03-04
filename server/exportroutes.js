@@ -7,7 +7,7 @@ const defaultLog = require('./log')
 const csv = require('./csvFile')
 const ResultsTable = require('./ResultsTable')
 
-const errorHtml = (message) => `
+const errorHtml = message => `
   <link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
   <div aria-live="polite" role="alert" class="alert alert-danger">${message}</div>
 `
@@ -21,7 +21,8 @@ router.post('/start', (req, res) => {
 
   // The correlation is also passed to Canvas. Canvas will call the next step
   // WITH the correlation ID
-  const correlationId = req.id || 'no "request_id" and therefore no correlation id'
+  const correlationId =
+    req.id || 'no "request_id" and therefore no correlation id'
   const log = (req.log || defaultLog).child({
     correlation_id: correlationId
   })
@@ -36,31 +37,37 @@ router.post('/start', (req, res) => {
     const routerUrl = req.protocol + '://' + req.get('host') + req.baseUrl
 
     // URL with the next step of Oauth
-    const downloadUrl = routerUrl + '/download?' + querystring.stringify({
-      course_round: b.lis_course_offering_sourcedid,
-      canvas_course_id: b.custom_canvas_course_id,
-      correlation_id: correlationId
-    })
+    const downloadUrl =
+      routerUrl +
+      '/download?' +
+      querystring.stringify({
+        course_round: b.lis_course_offering_sourcedid,
+        canvas_course_id: b.custom_canvas_course_id,
+        correlation_id: correlationId
+      })
 
-    const canvasAuthUrl = `https://${process.env.CANVAS_HOST || 'kth.test.instructure.com'}/login/oauth2/auth?` + querystring.stringify({
-      client_id: process.env.CANVAS_CLIENT_ID,
-      response_type: 'code',
-      redirect_uri: downloadUrl.toString(),
-      scope: [
-        'url:GET|/api/v1/courses/:course_id/assignments',
-        'url:GET|/api/v1/courses/:course_id/custom_gradebook_columns',
-        'url:GET|/api/v1/courses/:course_id/users',
-        'url:GET|/api/v1/courses/:course_id/students/submissions',
-        'url:GET|/api/v1/sections/:id'
-      ].join(' ')
-    })
+    const canvasAuthUrl =
+      `https://${process.env.CANVAS_HOST ||
+        'kth.test.instructure.com'}/login/oauth2/auth?` +
+      querystring.stringify({
+        client_id: process.env.CANVAS_CLIENT_ID,
+        response_type: 'code',
+        redirect_uri: downloadUrl.toString(),
+        scope: [
+          'url:GET|/api/v1/courses/:course_id/assignments',
+          'url:GET|/api/v1/courses/:course_id/custom_gradebook_columns',
+          'url:GET|/api/v1/courses/:course_id/users',
+          'url:GET|/api/v1/courses/:course_id/students/submissions',
+          'url:GET|/api/v1/sections/:id'
+        ].join(' ')
+      })
     log.info('Tell auth to redirect back to', downloadUrl.toString())
     res.redirect(canvasAuthUrl)
   } catch (e) {
     log.error('Export failed on start', e)
-    res.status(500).send(
-      errorHtml('Something has gone wrong. Contact the IT support team')
-    )
+    res
+      .status(500)
+      .send(errorHtml('Something has gone wrong. Contact the IT support team'))
   }
 })
 
@@ -73,34 +80,52 @@ router.get('/download', (req, res) => {
   })
 
   if (!req.query || !req.query.canvas_course_id) {
-    log.warn('Missing parameter "canvas_course_id". Sending error message to the user')
-    res.status(400).send(
-      errorHtml('The page you are trying to enter is not valid. If you came here by a link, contact the IT department')
+    log.warn(
+      'Missing parameter "canvas_course_id". Sending error message to the user'
     )
+    res
+      .status(400)
+      .send(
+        errorHtml(
+          'The page you are trying to enter is not valid. If you came here by a link, contact the IT department'
+        )
+      )
     return
   }
 
   if (req.query.error && req.query.error === 'access_denied') {
-    log.warn('The user has not authorized the tool. Sending error message to the user')
-    res.status(400).send(
-      errorHtml('You must authorize the app to acesss your Canvas data.')
+    log.warn(
+      'The user has not authorized the tool. Sending error message to the user'
     )
+    res
+      .status(400)
+      .send(errorHtml('You must authorize the app to acesss your Canvas data.'))
     return
   }
 
   if (req.query.error) {
-    log.error(`Unexpected "error" parameter in the URL query: "${req.query.error}". Sending error message to the user`)
-    res.status(400).send(
-      errorHtml('An error ocurred. Please try again later or contact the IT department')
+    log.error(
+      `Unexpected "error" parameter in the URL query: "${req.query.error}". Sending error message to the user`
     )
+    res
+      .status(400)
+      .send(
+        errorHtml(
+          'An error ocurred. Please try again later or contact the IT department'
+        )
+      )
     return
   }
 
   if (!req.query.code) {
     log.warn('Missing parameter "code". Sending error message to the user')
-    res.status(400).send(
-      errorHtml('The page you are trying to enter is not valid. If you came here by a link, contact the IT department')
-    )
+    res
+      .status(400)
+      .send(
+        errorHtml(
+          'The page you are trying to enter is not valid. If you came here by a link, contact the IT department'
+        )
+      )
     return
   }
 
@@ -114,9 +139,13 @@ router.get('/download', (req, res) => {
     `)
   } catch (e) {
     log.error('An error when requesting to download the file', e)
-    res.status(500).send(
-      errorHtml('Something has gone wrong. Please contact the IT support team')
-    )
+    res
+      .status(500)
+      .send(
+        errorHtml(
+          'Something has gone wrong. Please contact the IT support team'
+        )
+      )
   }
 })
 
@@ -126,13 +155,17 @@ router.get('/file', async (req, res) => {
   const correlationId = req.query.correlation_id || req.id
   const courseRound = req.query.course_round
   const canvasCourseId = req.query.canvas_course_id
-  const fileName = `${courseRound || 'canvas'}-${moment().firmat('YYYYMMDD-HHMMSS')}-results.csv`
+  const fileName = `${courseRound || 'canvas'}-${moment().firmat(
+    'YYYYMMDD-HHMMSS'
+  )}-results.csv`
   const log = (req.log || defaultLog).child({
     correlation_id: correlationId,
     file_name: fileName
   })
 
-  log.info(`Starting to create CSV file for courseRound ${courseRound} / canvasCourseId:  ${canvasCourseId}`)
+  log.info(
+    `Starting to create CSV file for courseRound ${courseRound} / canvasCourseId:  ${canvasCourseId}`
+  )
 
   // There are errors that can be handled before starting to create a CSV file.
   // For example, authorization errors from Canvas
@@ -141,11 +174,14 @@ router.get('/file', async (req, res) => {
   try {
     // URL with the second step of Oauth
     const routerUrl = req.protocol + '://' + req.get('host') + req.baseUrl
-    const downloadUrl = routerUrl + '/download?' + querystring.stringify({
-      course_round: courseRound,
-      canvas_course_id: canvasCourseId,
-      correlation_id: correlationId
-    })
+    const downloadUrl =
+      routerUrl +
+      '/download?' +
+      querystring.stringify({
+        course_round: courseRound,
+        canvas_course_id: canvasCourseId,
+        correlation_id: correlationId
+      })
     const options = {
       oauth: {
         code: req.query.code,
@@ -156,7 +192,10 @@ router.get('/file', async (req, res) => {
 
     table = await ResultsTable.create(canvasCourseId, options)
   } catch (e) {
-    log.warn('Error getting the token from Canvas. Sending error message to the user', e)
+    log.warn(
+      'Error getting the token from Canvas. Sending error message to the user',
+      e
+    )
     res.status(400).send(
       errorHtml(`
         <h3>Access denied</h3>
@@ -173,7 +212,7 @@ router.get('/file', async (req, res) => {
   // once the user starts receiving the file
   res.set({
     'content-type': 'text/csv; charset=utf-8',
-    'location': 'https://www.kth.se'
+    location: 'https://www.kth.se'
   })
   res.attachment(fileName)
   res.write('\uFEFF')
