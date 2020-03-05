@@ -11,11 +11,6 @@
     "format": "prettier-standard \"**/*.{js,md,yml,json}\"",
     "debug": "NODE_ENV=development node --nolazy --inspect-brk=9229 app.js | bunyan -o short"
   },
-  "standard": {
-    "ignore": [
-      "**/test/"
-    ]
-  },
   "dependencies": {
     "@kth/reqvars": "^2.0.1",
     "body-parser": "^1.19.0",
@@ -44,8 +39,5 @@
     "sinon": "^7.4.2",
     "tap-spec": "^5.0.0",
     "tape": "^4.11.0"
-  },
-  "engines": {
-    "node": "8.6.0"
   }
 }
