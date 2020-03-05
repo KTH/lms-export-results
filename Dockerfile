@@ -5,6 +5,7 @@ WORKDIR /app
 COPY ["config", "config"]
 COPY ["package.json", "package.json"]
 COPY ["package-lock.json", "package-lock.json"]
+COPY [".prettierignore", ".prettierignore"]
 
 # Source files in root
 COPY [".env.in", ".env.in"]
