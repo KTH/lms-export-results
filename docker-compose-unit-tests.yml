@@ -7,7 +7,6 @@ services:
   unit_tests:
     image: $LOCAL_IMAGE_ID
 
-
     # Since we do not want to add tests to our
     # production image. We mount the catalog
     # ‘tests’ on in the repo on your local machine
