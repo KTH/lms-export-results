@@ -23,4 +23,4 @@ services:
       sh -c "apk --no-cache --virtual build-dependencies add \
             git \
             && npm install \
-            && npm run test:docker-unit"
+            && npm test"
