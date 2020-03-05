@@ -20,6 +20,7 @@ test('"iterateLines()" with 0 students should finish without calling the callbac
   }
   class CanvasApiMock {
     get (url, cb) {
+      // eslint-disable-next-line standard/no-callback-literal
       cb([])
       return []
     }
@@ -49,6 +50,7 @@ test('"iterateLines()" with 1 student should throw an error if preload() was not
           name: 'section_name'
         }
       } else if (url.includes('students/submissions')) {
+        // eslint-disable-next-line standard/no-callback-literal
         await cb([{ id: '1' }])
       } else {
         return []
@@ -120,6 +122,7 @@ test('"iterateLines()" should work normally', async t => {
       } else if (
         url.includes('courses/canvas_course_id/students/submissions')
       ) {
+        // eslint-disable-next-line standard/no-callback-literal
         return cb([
           {
             user_id: 'u1',
@@ -213,6 +216,7 @@ test('"iterateLines()" should work even if some fields are missing', async t => 
       } else if (
         url.includes('courses/canvas_course_id/students/submissions')
       ) {
+        // eslint-disable-next-line standard/no-callback-literal
         return cb([
           {
             user_id: 'u1',
@@ -313,6 +317,7 @@ test('returned assignments should be in the right order', async t => {
       } else if (
         url.includes('courses/canvas_course_id/students/submissions')
       ) {
+        // eslint-disable-next-line standard/no-callback-literal
         return cb([
           {
             user_id: 'u1',

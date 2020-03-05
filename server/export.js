@@ -22,7 +22,7 @@ function exportResults (req, res) {
       `The user ${b.lis_person_sourcedid}, ${b.custom_canvas_user_login_id}, is exporting the course ${b.context_label} with id ${b.custom_canvas_course_id}`
     )
 
-    let courseRound = b.lis_course_offering_sourcedid
+    const courseRound = b.lis_course_offering_sourcedid
     const canvasCourseId = b.custom_canvas_course_id
     const fullUrl =
       (process.env.PROXY_BASE || req.protocol + '://' + req.get('host')) +
@@ -81,7 +81,7 @@ async function getAssignmentIdsAndHeaders ({ canvasApi, canvasCourseId }) {
     `/courses/${canvasCourseId}/assignments`
   )
 
-  for (let t of assignments) {
+  for (const t of assignments) {
     const id = '' + t.id
     assignmentIds.push(id)
     headers[id] = `${t.name} (${t.id})`
@@ -135,7 +135,7 @@ function createCustomColumnsContent ({ customColumnsData, customColumns }) {
 
 function createSubmissionLineContent ({ student, assignmentIds }) {
   const row = {}
-  for (let submission of student.submissions) {
+  for (const submission of student.submissions) {
     row['' + submission.assignment_id] = {
       grade: submission.entered_grade || '',
       submitted_at: submission.submitted_at || ''
@@ -268,11 +268,11 @@ async function getCustomColumnsFn ({
   const customColumns = await canvasApi.get(
     `/courses/${canvasCourseId}/custom_gradebook_columns`
   )
-  for (let customColumn of customColumns) {
+  for (const customColumn of customColumns) {
     const data = await canvasApi.get(
       `/courses/${canvasCourseId}/custom_gradebook_columns/${customColumn.id}/data`
     )
-    for (let dataEntry of data) {
+    for (const dataEntry of data) {
       customColumnsData[dataEntry.user_id] =
         customColumnsData[dataEntry.user_id] || {}
       customColumnsData[dataEntry.user_id][customColumn.id] = dataEntry.content
@@ -306,7 +306,7 @@ async function exportResults3 (req, res) {
   log.info(`Should export for ${courseRound} / ${canvasCourseId}`)
 
   let accessToken
-  let aggregatedData = []
+  const aggregatedData = []
 
   try {
     accessToken = await getAccessToken({
@@ -402,7 +402,7 @@ async function exportResults3 (req, res) {
       log
     })
 
-    for (let student of students) {
+    for (const student of students) {
       let ldapClient
       try {
         ldapClient = await ldap.getBoundClient({ log })
@@ -425,7 +425,7 @@ async function exportResults3 (req, res) {
         aggregatedData.push(csvString)
         res.write(csvString)
       } catch (e) {
-        log.error(`Export failed: `, e)
+        log.error('Export failed: ', e)
         // Instead of writing a status:500, write an error in the file. Otherwise the browser will think that the download is finished.
         res.write(
           'An error occured when exporting a student. Something is probably missing in this file.'

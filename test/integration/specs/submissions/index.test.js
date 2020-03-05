@@ -10,13 +10,13 @@ const { getSubmissions } = require('../../../../server/submissions')
 // TODO: this isn't really a good integration test, I just used it during the development. I guess we should remove it.
 test('should construct the similar json', async t => {
   const sections = await canvasApi.get(
-    `courses/3719/sections?include[]=students`
+    'courses/3719/sections?include[]=students'
   )
 
   // Get the json, sorted, without the test user. The new function don't incluce the test users.
   const oldWay = (
     await canvasApi.get(
-      `courses/3719/students/submissions?grouped=1&student_ids[]=all&per_page=100`
+      'courses/3719/students/submissions?grouped=1&student_ids[]=all&per_page=100'
     )
   )
     .sort((a, b) => a.user_id - b.user_id)

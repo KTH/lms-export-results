@@ -70,7 +70,7 @@ test('should return a function with user_id as argument, and the column data as 
   t.end()
 })
 
-test(`should sort the custom column headers by position`, t => {
+test('should sort the custom column headers by position', t => {
   const customColumns = [
     {
       id: 185,
@@ -128,7 +128,6 @@ test(`should return a function with user_id as argument,
   and an object as result
   if the user has no data for the custom columns
   `, async t => {
-  const userId = 123
   const userId2 = 456
   const canvasCourseId = 0
   const canvasApi = { get: sinon.stub() }

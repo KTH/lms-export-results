@@ -4,7 +4,6 @@ const randomstring = require('randomstring')
 
 const webdriver = require('selenium-webdriver')
 const By = webdriver.By
-const until = webdriver.until
 const rimraf = require('rimraf-promise')
 const firefox = require('selenium-webdriver/firefox')
 const CanvasApi = require('kth-canvas-api')
@@ -16,7 +15,7 @@ const canvasApi = new CanvasApi(
 )
 
 // Set up firefox so that the file will be downloaded in a preferred folder
-let profile = new firefox.Profile()
+const profile = new firefox.Profile()
 profile.setPreference('browser.download.folderList', 2)
 profile.setPreference('browser.download.dir', folderName)
 profile.setPreference('browser.helperApps.neverAsk.saveToDisk', 'text/csv')
@@ -26,7 +25,7 @@ console.log('remove the /tmp/lms-export-results directory.')
 
 rimraf(folderName)
 
-let options = new firefox.Options().setProfile(profile)
+const options = new firefox.Options().setProfile(profile)
 
 const driver = new webdriver.Builder()
   .forBrowser('firefox')
@@ -47,14 +46,8 @@ async function createCanvasCourse () {
   return canvasCourse
 }
 
-async function prepareCourse (course) {
-  // Enroll the test user, 56313, as a teacher
-  // Enroll some students
-  return result
-}
-
 async function setupCourse () {
-  return await prepareCourse(await createCanvasCourse())
+  await createCanvasCourse()
 }
 
 test(`should write a file

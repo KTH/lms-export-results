@@ -15,7 +15,7 @@ module.exports = async function isAllowed (
     `/courses/${courseId}/enrollments?user_id=self`
   )
 
-  let allowedRoles = enrollments
+  const allowedRoles = enrollments
     .map(enrollment => parseInt(enrollment.role_id, 10))
     .filter(
       role =>

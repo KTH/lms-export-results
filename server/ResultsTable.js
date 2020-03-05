@@ -59,7 +59,7 @@ module.exports.create = async function createResultsFile (courseId, options) {
 
   function sortSubmissions (submissions) {
     const result = []
-    for (let assignment of assignments) {
+    for (const assignment of assignments) {
       const submission = submissions.find(
         s => s.assignment_id === assignment.id
       )
@@ -83,11 +83,11 @@ module.exports.create = async function createResultsFile (courseId, options) {
         await canvasApi.get(`courses/${courseId}/custom_gradebook_columns`)
       ).sort((c1, c2) => c1.position - c2.position) // Sort by "position" in "ascending" order
 
-      for (let column of customColumns) {
+      for (const column of customColumns) {
         const data = await canvasApi.get(
           `courses/${courseId}/custom_gradebook_columns/${column.id}/data`
         )
-        for (let d of data) {
+        for (const d of data) {
           if (!customColumnsCache[d.user_id]) {
             customColumnsCache[d.user_id] = []
           }
@@ -127,7 +127,7 @@ module.exports.create = async function createResultsFile (courseId, options) {
         async students => {
           const realStudents = students.filter(isReal)
 
-          for (let student of realStudents) {
+          for (const student of realStudents) {
             try {
               const section = await getSection(student.section_id)
               const canvasUser = canvasUsers.find(

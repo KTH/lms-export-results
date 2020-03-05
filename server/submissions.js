@@ -17,7 +17,7 @@ function extractUniqueStudentsAndSectionNamesFromSections (sections) {
               student => student.user_id === currentStudent.id
             )
           ) {
-            let sectionName = currentSection.name
+            const sectionName = currentSection.name
             const previousStudentEntry = accumulatedSectionStudents.find(
               sectionStudent => sectionStudent.user_id === currentStudent.id
             )
