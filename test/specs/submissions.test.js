@@ -2,7 +2,9 @@ const test = require('tape')
 const rewire = require('rewire')
 const _export = rewire('../../server/submissions')
 
-const extractStudentsFromSections = _export.__get__('extractUniqueStudentsAndSectionNamesFromSections')
+const extractStudentsFromSections = _export.__get__(
+  'extractUniqueStudentsAndSectionNamesFromSections'
+)
 
 const emptySections1 = []
 const emptySectionsResult1 = []
@@ -10,7 +12,8 @@ const emptySections2 = [
   {
     name: 'Section A',
     students: null
-  }, {
+  },
+  {
     name: 'Section B',
     students: null
   }
@@ -30,7 +33,8 @@ const uniqueSections = [
         sis_user_id: 'SHEL93922'
       }
     ]
-  }, {
+  },
+  {
     name: 'Section D',
     students: [
       {
@@ -82,39 +86,55 @@ const uniqueSectionsResult = [
 ]
 
 const duplicateSections1 = uniqueSections.slice()
-duplicateSections1[1].students.push(
-  {
-    id: 8,
-    sis_user_id: 'SHEL93923'
-  }
-)
+duplicateSections1[1].students.push({
+  id: 8,
+  sis_user_id: 'SHEL93923'
+})
 const duplicateSectionsResult1 = uniqueSectionsResult
 
 const duplicateSections2 = uniqueSections.slice()
-duplicateSections1[1].students.push(
-  {
-    id: 4,
-    sis_user_id: 'SHEL93922'
-  }
-)
+duplicateSections1[1].students.push({
+  id: 4,
+  sis_user_id: 'SHEL93922'
+})
 const duplicateSectionsResult2 = uniqueSectionsResult.slice()
 duplicateSectionsResult2[1].section_names = 'Section C / Section D'
 
 test('should correctly extract unique students from list of sections', t => {
   let extractedStudents = extractStudentsFromSections(emptySections1)
-  t.deepEqual(extractedStudents, emptySectionsResult1, 'function should be able to handle empty sections')
+  t.deepEqual(
+    extractedStudents,
+    emptySectionsResult1,
+    'function should be able to handle empty sections'
+  )
 
   extractedStudents = extractStudentsFromSections(emptySections2)
-  t.deepEqual(extractedStudents, emptySectionsResult2, 'function should be able to handle sections without students')
+  t.deepEqual(
+    extractedStudents,
+    emptySectionsResult2,
+    'function should be able to handle sections without students'
+  )
 
   extractedStudents = extractStudentsFromSections(uniqueSections)
-  t.deepEqual(extractedStudents, uniqueSectionsResult, 'function should be able to handle all unique students')
+  t.deepEqual(
+    extractedStudents,
+    uniqueSectionsResult,
+    'function should be able to handle all unique students'
+  )
 
   extractedStudents = extractStudentsFromSections(duplicateSections1)
-  t.deepEqual(extractedStudents, duplicateSectionsResult1, 'function should be able to handle duplicated students found within the same section')
+  t.deepEqual(
+    extractedStudents,
+    duplicateSectionsResult1,
+    'function should be able to handle duplicated students found within the same section'
+  )
 
   extractedStudents = extractStudentsFromSections(duplicateSections2)
-  t.deepEqual(extractedStudents, duplicateSectionsResult2, 'function should be able to handle duplicated students found across different sections')
+  t.deepEqual(
+    extractedStudents,
+    duplicateSectionsResult2,
+    'function should be able to handle duplicated students found across different sections'
+  )
 
   t.end()
 })

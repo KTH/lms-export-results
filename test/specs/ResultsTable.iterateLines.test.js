@@ -20,6 +20,7 @@ test('"iterateLines()" with 0 students should finish without calling the callbac
   }
   class CanvasApiMock {
     get (url, cb) {
+      // eslint-disable-next-line standard/no-callback-literal
       cb([])
       return []
     }
@@ -49,9 +50,8 @@ test('"iterateLines()" with 1 student should throw an error if preload() was not
           name: 'section_name'
         }
       } else if (url.includes('students/submissions')) {
-        await cb([
-          { id: '1' }
-        ])
+        // eslint-disable-next-line standard/no-callback-literal
+        await cb([{ id: '1' }])
       } else {
         return []
       }
@@ -99,30 +99,49 @@ test('"iterateLines()" should work normally', async t => {
           { name: 'Assignment 1', id: 'a1' },
           { name: 'Assignment 2', id: 'a2' }
         ]
-      } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student_view')) {
+      } else if (
+        url.includes(
+          'courses/canvas_course_id/users?enrollment_type[]=student_view'
+        )
+      ) {
         return []
-      } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student')) {
-        return [
-          { name: 'John', id: 'u1', login_id: 'john@example.com' }
-        ]
-      } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns/cc1/data')) {
-        return [
-          { user_id: 'u1', content: 'CC content' }
-        ]
-      } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns')) {
-        return [
-          { title: 'CC 1', id: 'cc1', position: 0 }
-        ]
-      } else if (url.includes('courses/canvas_course_id/students/submissions')) {
-        return cb([{
-          user_id: 'u1',
-          sis_user_id: 'sis1',
-          section_id: 'section1',
-          submissions: [
-            { assignment_id: 'a1', submitted_at: 'SUBMISSION-1', entered_grade: 'pass1' },
-            { assignment_id: 'a2', submitted_at: 'SUBMISSION-2', entered_grade: 'pass2' }
-          ]
-        }])
+      } else if (
+        url.includes('courses/canvas_course_id/users?enrollment_type[]=student')
+      ) {
+        return [{ name: 'John', id: 'u1', login_id: 'john@example.com' }]
+      } else if (
+        url.includes(
+          'courses/canvas_course_id/custom_gradebook_columns/cc1/data'
+        )
+      ) {
+        return [{ user_id: 'u1', content: 'CC content' }]
+      } else if (
+        url.includes('courses/canvas_course_id/custom_gradebook_columns')
+      ) {
+        return [{ title: 'CC 1', id: 'cc1', position: 0 }]
+      } else if (
+        url.includes('courses/canvas_course_id/students/submissions')
+      ) {
+        // eslint-disable-next-line standard/no-callback-literal
+        return cb([
+          {
+            user_id: 'u1',
+            sis_user_id: 'sis1',
+            section_id: 'section1',
+            submissions: [
+              {
+                assignment_id: 'a1',
+                submitted_at: 'SUBMISSION-1',
+                entered_grade: 'pass1'
+              },
+              {
+                assignment_id: 'a2',
+                submitted_at: 'SUBMISSION-2',
+                entered_grade: 'pass2'
+              }
+            ]
+          }
+        ])
       }
     }
 
@@ -142,10 +161,18 @@ test('"iterateLines()" should work normally', async t => {
 
   t.plan(1)
   const expected = [
-    'sis1', 'u1', 'Section 1', 'John', 'Doe', '="111122334455"', 'john@example.com',
+    'sis1',
+    'u1',
+    'Section 1',
+    'John',
+    'Doe',
+    '="111122334455"',
+    'john@example.com',
     'CC content',
-    'SUBMISSION-1', 'pass1',
-    'SUBMISSION-2', 'pass2'
+    'SUBMISSION-1',
+    'pass1',
+    'SUBMISSION-2',
+    'pass2'
   ]
   await file.iterateRows(row => {
     t.deepEqual(row, expected)
@@ -165,30 +192,39 @@ test('"iterateLines()" should work even if some fields are missing', async t => 
   class CanvasApiMock {
     async get (url, cb) {
       if (url.includes('courses/canvas_course_id/assignments')) {
-        return [
-          { name: 'Assignment 1', id: 'a1' }
-        ]
-      } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student_view')) {
+        return [{ name: 'Assignment 1', id: 'a1' }]
+      } else if (
+        url.includes(
+          'courses/canvas_course_id/users?enrollment_type[]=student_view'
+        )
+      ) {
         return []
-      } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student')) {
-        return [
-          { name: 'John', id: 'u1', login_id: 'john@example.com' }
-        ]
-      } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns/cc1/data')) {
-        return [
-          { user_id: 'u1', content: 'CC content' }
-        ]
-      } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns')) {
-        return [
-          { title: 'CC 1', id: 'cc1', position: 0 }
-        ]
-      } else if (url.includes('courses/canvas_course_id/students/submissions')) {
-        return cb([{
-          user_id: 'u1',
-          sis_user_id: 'sis1',
-          section_id: 'section1',
-          submissions: []
-        }])
+      } else if (
+        url.includes('courses/canvas_course_id/users?enrollment_type[]=student')
+      ) {
+        return [{ name: 'John', id: 'u1', login_id: 'john@example.com' }]
+      } else if (
+        url.includes(
+          'courses/canvas_course_id/custom_gradebook_columns/cc1/data'
+        )
+      ) {
+        return [{ user_id: 'u1', content: 'CC content' }]
+      } else if (
+        url.includes('courses/canvas_course_id/custom_gradebook_columns')
+      ) {
+        return [{ title: 'CC 1', id: 'cc1', position: 0 }]
+      } else if (
+        url.includes('courses/canvas_course_id/students/submissions')
+      ) {
+        // eslint-disable-next-line standard/no-callback-literal
+        return cb([
+          {
+            user_id: 'u1',
+            sis_user_id: 'sis1',
+            section_id: 'section1',
+            submissions: []
+          }
+        ])
       }
     }
 
@@ -208,9 +244,16 @@ test('"iterateLines()" should work even if some fields are missing', async t => 
 
   t.plan(1)
   const expected = [
-    'sis1', 'u1', '', 'John', '', '=""', 'john@example.com',
+    'sis1',
+    'u1',
+    '',
+    'John',
+    '',
+    '=""',
+    'john@example.com',
     'CC content',
-    '', ''
+    '',
+    ''
   ]
   await file.iterateRows(row => {
     t.deepEqual(row, expected)
@@ -248,25 +291,44 @@ test('returned assignments should be in the right order', async t => {
           { name: 'Assignment 1', id: 'a1' },
           { name: 'Assignment 2', id: 'a2' }
         ]
-      } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student_view')) {
+      } else if (
+        url.includes(
+          'courses/canvas_course_id/users?enrollment_type[]=student_view'
+        )
+      ) {
         return []
-      } else if (url.includes('courses/canvas_course_id/users?enrollment_type[]=student')) {
+      } else if (
+        url.includes('courses/canvas_course_id/users?enrollment_type[]=student')
+      ) {
         return [
           { name: 'John', id: 'u1', login_id: 'john@example.com' },
           { name: 'Anna', id: 'u2', login_id: 'anna@example.com' }
         ]
-      } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns/cc1/data')) {
+      } else if (
+        url.includes(
+          'courses/canvas_course_id/custom_gradebook_columns/cc1/data'
+        )
+      ) {
         return []
-      } else if (url.includes('courses/canvas_course_id/custom_gradebook_columns')) {
+      } else if (
+        url.includes('courses/canvas_course_id/custom_gradebook_columns')
+      ) {
         return []
-      } else if (url.includes('courses/canvas_course_id/students/submissions')) {
+      } else if (
+        url.includes('courses/canvas_course_id/students/submissions')
+      ) {
+        // eslint-disable-next-line standard/no-callback-literal
         return cb([
           {
             user_id: 'u1',
             sis_user_id: 'sis1',
             section_id: 'section1',
             submissions: [
-              { assignment_id: 'a2', submitted_at: 'SUBMISSION-1-2', entered_grade: 'pass1-2' }
+              {
+                assignment_id: 'a2',
+                submitted_at: 'SUBMISSION-1-2',
+                entered_grade: 'pass1-2'
+              }
             ]
           },
           {
@@ -274,8 +336,16 @@ test('returned assignments should be in the right order', async t => {
             sis_user_id: 'sis2',
             section_id: 'section1',
             submissions: [
-              { assignment_id: 'a1', submitted_at: 'SUBMISSION-2-1', entered_grade: 'pass2-1' },
-              { assignment_id: 'a2', submitted_at: 'SUBMISSION-2-2', entered_grade: 'pass2-2' }
+              {
+                assignment_id: 'a1',
+                submitted_at: 'SUBMISSION-2-1',
+                entered_grade: 'pass2-1'
+              },
+              {
+                assignment_id: 'a2',
+                submitted_at: 'SUBMISSION-2-2',
+                entered_grade: 'pass2-2'
+              }
             ]
           }
         ])
@@ -300,14 +370,30 @@ test('returned assignments should be in the right order', async t => {
   await file.iterateRows(row => body.push(row))
   const expectedBody = [
     [
-      'sis1', 'u1', 'Section 1', 'John', 'Doe', '="111122334455"', 'john@example.com',
-      '', '',
-      'SUBMISSION-1-2', 'pass1-2'
+      'sis1',
+      'u1',
+      'Section 1',
+      'John',
+      'Doe',
+      '="111122334455"',
+      'john@example.com',
+      '',
+      '',
+      'SUBMISSION-1-2',
+      'pass1-2'
     ],
     [
-      'sis2', 'u2', 'Section 1', 'Anna', 'Doa', '="999988776655"', 'anna@example.com',
-      'SUBMISSION-2-1', 'pass2-1',
-      'SUBMISSION-2-2', 'pass2-2'
+      'sis2',
+      'u2',
+      'Section 1',
+      'Anna',
+      'Doa',
+      '="999988776655"',
+      'anna@example.com',
+      'SUBMISSION-2-1',
+      'pass2-1',
+      'SUBMISSION-2-2',
+      'pass2-2'
     ]
   ]
 

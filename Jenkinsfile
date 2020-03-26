@@ -1,6 +1,10 @@
 String cron_string = BRANCH_NAME == "master" ? "@midnight" : ""
 
 pipeline {
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '5'))
+    }
+
     agent any
 
     triggers {
@@ -18,6 +22,9 @@ pipeline {
             environment {
                 COMPOSE_PROJECT_NAME = "${env.BUILD_TAG}"
 
+                // Since a successful run relies on environment varibles being set,
+                // we need to skip it for now.
+                SKIP_DRY_RUN="True"
             }
             steps {
                 sh 'ls $JENKINS_HOME/workspace/zermatt/jenkins/'
