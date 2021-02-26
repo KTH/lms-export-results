@@ -39,19 +39,6 @@ async function checkLdap ({ log }) {
   }
 }
 
-async function checkIp ({ log }) {
-  try {
-    const { body } = await got({
-      url: 'https://api.ipify.org?format=json',
-      json: true
-    })
-    return { ok: true, msg: body.ip }
-  } catch (e) {
-    log.error('IP check failed', e)
-    return { ok: false, msg: 'failed IP test' }
-  }
-}
-
 function _about (req, res) {
   res.setHeader('Content-Type', 'text/plain')
   res.send(`
@@ -69,14 +56,13 @@ function _about (req, res) {
 
 async function _monitor (req, res) {
   const log = req.log || defaultLog
-  const checks = await Promise.all([checkLdap({ log }), checkIp({ log })])
+  const checks = await Promise.all([checkLdap({ log })])
 
   res.setHeader('Content-Type', 'text/plain')
   res.send(`
 APPLICATION_STATUS: ${checks.every(e => e.ok) ? 'OK' : 'ERROR'}
 
 LDAP: ${checks[0].ok ? 'OK' : 'ERROR'} ${checks[0].msg}
-IP: ${checks[1].ok ? 'OK' : 'ERROR'} ${checks[1].msg}
   `)
 }
 
