@@ -6,6 +6,7 @@ services:
   #############################################
   unit_tests:
     image: $LOCAL_IMAGE_ID
+    context: "development"
 
     # Since we do not want to add tests to our
     # production image. We mount the catalog
@@ -19,7 +20,4 @@ services:
     # inside the container
     tty: false
     command: >
-      sh -c "apk --no-cache --virtual build-dependencies add \
-            git \
-            && npm install \
-            && npm test"
+      sh -c "npm test"
