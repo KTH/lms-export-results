@@ -1,10 +1,12 @@
+/* eslint-disable max-classes-per-file */
 const test = require("tape");
 const rewire = require("rewire");
-const ResultsTable = rewire("../../server/ResultsTable");
 const log = require("bunyan").createLogger({
   name: "test",
   level: 0, // Creates a very noisy logger
 });
+
+const ResultsTable = rewire("../../server/ResultsTable");
 
 ResultsTable.__set__("got", () => ({
   body: {
@@ -19,8 +21,8 @@ test('"iterateLines()" with 0 students should finish without calling the callbac
     unbind: () => {},
   };
   class CanvasApiMock {
-    get(url, cb) {
-      // eslint-disable-next-line standard/no-callback-literal
+    // eslint-disable-next-line class-methods-use-this
+    get(_url, cb) {
       cb([]);
       return [];
     }
@@ -46,18 +48,20 @@ test('"iterateLines()" with 1 student should throw an error if preload() was not
     unbind: () => {},
   };
   class CanvasApiMock {
+    // eslint-disable-next-line class-methods-use-this
     async get(url, cb) {
       if (url.includes("sections")) {
         return {
           id: "section_id",
           name: "section_name",
         };
-      } else if (url.includes("students/submissions")) {
-        // eslint-disable-next-line standard/no-callback-literal
-        await cb([{ id: "1" }]);
-      } else {
-        return [];
       }
+
+      if (url.includes("students/submissions")) {
+        return cb([{ id: "1" }]);
+      }
+
+      return [];
     }
   }
 
@@ -87,6 +91,7 @@ test('"iterateLines()" should work normally', async (t) => {
         unbind: () => {},
       };
     },
+
     lookupUser(ldapClient, id) {
       if (id === "sis1") {
         return {
@@ -95,40 +100,48 @@ test('"iterateLines()" should work normally', async (t) => {
           personnummer: "111122334455",
         };
       }
+
+      return {};
     },
   };
 
   class CanvasApiMock {
+    // eslint-disable-next-line class-methods-use-this
     async get(url, cb) {
       if (url.includes("courses/canvas_course_id/assignments")) {
         return [
           { name: "Assignment 1", id: "a1" },
           { name: "Assignment 2", id: "a2" },
         ];
-      } else if (
+      }
+
+      if (
         url.includes(
           "courses/canvas_course_id/users?enrollment_type[]=student_view"
         )
       ) {
         return [];
-      } else if (
+      }
+
+      if (
         url.includes("courses/canvas_course_id/users?enrollment_type[]=student")
       ) {
         return [{ name: "John", id: "u1", login_id: "john@example.com" }];
-      } else if (
+      }
+
+      if (
         url.includes(
           "courses/canvas_course_id/custom_gradebook_columns/cc1/data"
         )
       ) {
         return [{ user_id: "u1", content: "CC content" }];
-      } else if (
-        url.includes("courses/canvas_course_id/custom_gradebook_columns")
-      ) {
+      }
+
+      if (url.includes("courses/canvas_course_id/custom_gradebook_columns")) {
         return [{ title: "CC 1", id: "cc1", position: 0 }];
-      } else if (
-        url.includes("courses/canvas_course_id/students/submissions")
-      ) {
-        // eslint-disable-next-line standard/no-callback-literal
+      }
+
+      if (url.includes("courses/canvas_course_id/students/submissions")) {
         return cb([
           {
             user_id: "u1",
@@ -149,12 +162,17 @@ test('"iterateLines()" should work normally', async (t) => {
           },
         ]);
       }
+
+      return [];
     }
 
+    // eslint-disable-next-line class-methods-use-this
     async requestUrl(url) {
       if (url.includes("sections/section1")) {
         return { name: "Section 1" };
       }
+
+      return {};
     }
   }
 
@@ -199,33 +217,39 @@ test('"iterateLines()" should work even if some fields are missing', async (t) =
   };
 
   class CanvasApiMock {
+    // eslint-disable-next-line class-methods-use-this
     async get(url, cb) {
       if (url.includes("courses/canvas_course_id/assignments")) {
         return [{ name: "Assignment 1", id: "a1" }];
-      } else if (
+      }
+
+      if (
         url.includes(
           "courses/canvas_course_id/users?enrollment_type[]=student_view"
         )
       ) {
         return [];
-      } else if (
+      }
+
+      if (
         url.includes("courses/canvas_course_id/users?enrollment_type[]=student")
       ) {
         return [{ name: "John", id: "u1", login_id: "john@example.com" }];
-      } else if (
+      }
+
+      if (
         url.includes(
           "courses/canvas_course_id/custom_gradebook_columns/cc1/data"
         )
       ) {
         return [{ user_id: "u1", content: "CC content" }];
-      } else if (
-        url.includes("courses/canvas_course_id/custom_gradebook_columns")
-      ) {
+      }
+
+      if (url.includes("courses/canvas_course_id/custom_gradebook_columns")) {
         return [{ title: "CC 1", id: "cc1", position: 0 }];
-      } else if (
-        url.includes("courses/canvas_course_id/students/submissions")
-      ) {
-        // eslint-disable-next-line standard/no-callback-literal
+      }
+
+      if (url.includes("courses/canvas_course_id/students/submissions")) {
         return cb([
           {
             user_id: "u1",
@@ -235,12 +259,13 @@ test('"iterateLines()" should work even if some fields are missing', async (t) =
           },
         ]);
       }
+
+      return [];
     }
 
-    async requestUrl(url) {
-      if (url.includes("sections/section1")) {
-        return {};
-      }
+    // eslint-disable-next-line class-methods-use-this
+    async requestUrl() {
+      return {};
     }
   }
 
@@ -286,50 +311,51 @@ test("returned assignments should be in the right order", async (t) => {
           sn: "Doe",
           personnummer: "111122334455",
         };
-      } else {
-        return {
-          givenName: "Anna",
-          sn: "Doa",
-          personnummer: "999988776655",
-        };
       }
+
+      return {
+        givenName: "Anna",
+        sn: "Doa",
+        personnummer: "999988776655",
+      };
     },
   };
 
   class CanvasApiMock {
+    // eslint-disable-next-line class-methods-use-this
     async get(url, cb) {
       if (url.includes("courses/canvas_course_id/assignments")) {
         return [
           { name: "Assignment 1", id: "a1" },
           { name: "Assignment 2", id: "a2" },
         ];
-      } else if (
+      }
+      if (
         url.includes(
           "courses/canvas_course_id/users?enrollment_type[]=student_view"
         )
       ) {
         return [];
-      } else if (
+      }
+      if (
         url.includes("courses/canvas_course_id/users?enrollment_type[]=student")
       ) {
         return [
           { name: "John", id: "u1", login_id: "john@example.com" },
           { name: "Anna", id: "u2", login_id: "anna@example.com" },
         ];
-      } else if (
+      }
+      if (
         url.includes(
           "courses/canvas_course_id/custom_gradebook_columns/cc1/data"
         )
       ) {
         return [];
-      } else if (
-        url.includes("courses/canvas_course_id/custom_gradebook_columns")
-      ) {
+      }
+      if (url.includes("courses/canvas_course_id/custom_gradebook_columns")) {
         return [];
-      } else if (
-        url.includes("courses/canvas_course_id/students/submissions")
-      ) {
-        // eslint-disable-next-line standard/no-callback-literal
+      }
+      if (url.includes("courses/canvas_course_id/students/submissions")) {
         return cb([
           {
             user_id: "u1",
@@ -362,12 +388,17 @@ test("returned assignments should be in the right order", async (t) => {
           },
         ]);
       }
+
+      return [];
     }
 
+    // eslint-disable-next-line class-methods-use-this
     async requestUrl(url) {
       if (url.includes("sections/section1")) {
         return { name: "Section 1" };
       }
+
+      return {};
     }
   }
 

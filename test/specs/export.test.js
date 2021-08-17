@@ -1,9 +1,12 @@
+/* eslint-disable no-console */
 const test = require("tape");
 const rewire = require("rewire");
 const sinon = require("sinon");
+
 const _export = rewire("../../server/export");
 
 class CanvasApi {
+  // eslint-disable-next-line class-methods-use-this
   get(url) {
     console.log(">>>>>>>> Mocking requestUrl <<<<<<<<", url);
     return [];
@@ -80,4 +83,4 @@ test(`should write a file
 
 test.skip(`should write a file
     with personnummer and name for the student
-    if there's one assignment with one submission in the course`, async (t) => {});
+    if there's one assignment with one submission in the course`, async () => {});

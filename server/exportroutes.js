@@ -1,12 +1,11 @@
 const express = require("express");
-const router = express.Router();
 const querystring = require("querystring");
 const moment = require("moment");
-
 const defaultLog = require("./log");
 const csv = require("./csvFile");
 const ResultsTable = require("./ResultsTable");
 
+const router = express.Router();
 const errorHtml = (message) => `
   <link rel="stylesheet" href="/api/lms-export-results/kth-style/css/kth-bootstrap.css">
   <div aria-live="polite" role="alert" class="alert alert-danger">${message}</div>

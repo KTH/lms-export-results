@@ -17,9 +17,9 @@ async function checkLdap({ log }) {
         ok: true,
         msg: `Could lookup u1famwov (got ${testUser.givenName} ${testUser.sn})`,
       };
-    } else {
-      return { ok: false, msg: "failed to lookup u1famwov in ldap" };
     }
+
+    return { ok: false, msg: "failed to lookup u1famwov in ldap" };
   } catch (e) {
     log.error("LDAP check failed", e);
     return { ok: false, msg: "failed to lookup u1famwov in ldap" };

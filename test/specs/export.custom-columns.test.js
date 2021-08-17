@@ -1,6 +1,7 @@
 const test = require("tape");
 const sinon = require("sinon");
 const rewire = require("rewire");
+
 const _export = rewire("../../server/export");
 
 const getCustomColumnsFn = _export.__get__("getCustomColumnsFn");

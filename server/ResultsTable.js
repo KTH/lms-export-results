@@ -1,11 +1,11 @@
 const CanvasApi = require("kth-canvas-api");
-const ldap = require("./ldap");
 const got = require("got");
+const ldap = require("./ldap");
 
 const flattenReducer = (acc, el) => [...acc, ...el];
 
 module.exports.create = async function createResultsFile(courseId, options) {
-  const log = options.log;
+  const { log } = options;
 
   let accessToken;
 
@@ -85,6 +85,7 @@ module.exports.create = async function createResultsFile(courseId, options) {
       ).sort((c1, c2) => c1.position - c2.position); // Sort by "position" in "ascending" order
 
       for (const column of customColumns) {
+        // eslint-disable-next-line no-await-in-loop
         const data = await canvasApi.get(
           `courses/${courseId}/custom_gradebook_columns/${column.id}/data`
         );
@@ -130,11 +131,13 @@ module.exports.create = async function createResultsFile(courseId, options) {
 
           for (const student of realStudents) {
             try {
+              // eslint-disable-next-line no-await-in-loop
               const section = await getSection(student.section_id);
               const canvasUser = canvasUsers.find(
                 (cu) => cu.id === student.user_id
               );
               const ldapUser =
+                // eslint-disable-next-line no-await-in-loop
                 (await ldap.lookupUser(ldapClient, student.sis_user_id)) || {};
 
               const fixedData = [
@@ -155,6 +158,7 @@ module.exports.create = async function createResultsFile(courseId, options) {
                 ])
                 .reduce(flattenReducer, []);
 
+              // eslint-disable-next-line no-await-in-loop
               const customColumnsData = await getCustomColumnsData(
                 student.user_id
               );

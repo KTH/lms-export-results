@@ -1,5 +1,7 @@
+/* eslint-disable max-classes-per-file */
 const test = require("tape");
 const rewire = require("rewire");
+
 const ResultsTable = rewire("../../server/ResultsTable");
 const log = require("bunyan").createLogger({
   name: "test",
@@ -32,7 +34,8 @@ test('"getHeaders()" should return 7 fixed headers when preload()-ed data is emp
   ResultsTable.__set__(
     "CanvasApi",
     class FakeCanvasApi {
-      get(url) {
+      // eslint-disable-next-line class-methods-use-this
+      get() {
         return [];
       }
     }
@@ -63,12 +66,13 @@ test('"getHeaders()" should return 9 headers when data is one assignment (7 fixe
   const ASSIGNMENT_NAME = "assignment_name";
   // A CanvasApi that returns always empty arrays
   class FakeCanvasApi {
+    // eslint-disable-next-line class-methods-use-this
     get(url) {
       if (url.includes("assignments")) {
         return [{ id: ASSIGNMENT_ID, name: ASSIGNMENT_NAME }];
-      } else {
-        return [];
       }
+
+      return [];
     }
   }
 
@@ -121,12 +125,13 @@ test('"getHeaders()" returns 15 headers when data are four assignment (7 fixed +
   ];
   // A CanvasApi that returns always empty arrays
   class FakeCanvasApi {
+    // eslint-disable-next-line class-methods-use-this
     get(url) {
       if (url.includes("assignments")) {
         return assignments;
-      } else {
-        return [];
       }
+
+      return [];
     }
   }
 
@@ -184,17 +189,15 @@ test('"getHeaders()" returns 15 headers when data are four assignment (7 fixed +
 
 test('"getHeaders() returns 10 headers when data are 1 assignment + 1 custom column (7 fixed + 2 per assignemnt + 1 per custom column', async (t) => {
   class FakeCanvasApi {
+    // eslint-disable-next-line class-methods-use-this
     get(url) {
       if (url.includes("assignments")) {
         return [{ id: "a1", name: "a1name" }];
-      } else if (
-        url.includes("custom_gradebook_columns") &&
-        !url.includes("data")
-      ) {
-        return [{ position: 0, title: "custom column 1" }];
-      } else {
-        return [];
       }
+      if (url.includes("custom_gradebook_columns") && !url.includes("data")) {
+        return [{ position: 0, title: "custom column 1" }];
+      }
+      return [];
     }
   }
 
@@ -219,6 +222,7 @@ test('"getHeaders() returns 10 headers when data are 1 assignment + 1 custom col
 
 test('"getHeaders() returns custom columns sorted by "position" in Canvas', async (t) => {
   class FakeCanvasApi {
+    // eslint-disable-next-line class-methods-use-this
     get(url) {
       if (url.includes("custom_gradebook_columns") && !url.includes("data")) {
         return [
@@ -226,9 +230,9 @@ test('"getHeaders() returns custom columns sorted by "position" in Canvas', asyn
           { position: 0, title: "custom column 0" },
           { position: 1, title: "custom column 1" },
         ];
-      } else {
-        return [];
       }
+
+      return [];
     }
   }
 

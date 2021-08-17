@@ -1,11 +1,11 @@
 function escapeCsvData(str) {
-  str = "" + str;
+  let result = "" + str;
 
-  if (str.includes(";") || str.includes(",")) {
-    str = `"${str}"`;
+  if (result.includes(";") || result.includes(",")) {
+    result = `"${result}"`;
   }
 
-  return str;
+  return result;
 }
 
 module.exports = {

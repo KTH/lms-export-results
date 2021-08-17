@@ -1,5 +1,6 @@
 const test = require("tape");
 const rewire = require("rewire");
+
 const _export = rewire("../../server/submissions");
 
 const extractStudentsFromSections = _export.__get__(

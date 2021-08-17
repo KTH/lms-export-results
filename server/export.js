@@ -1,13 +1,13 @@
-"use strict";
-const defaultLog = require("./log");
-const querystring = require("querystring");
-const { getSubmissions } = require("./submissions");
-const got = require("got");
 const CanvasApi = require("kth-canvas-api");
-const csv = require("./csvFile");
-const ldap = require("./ldap");
+const querystring = require("querystring");
+const got = require("got");
 const moment = require("moment");
 const _ = require("lodash");
+const defaultLog = require("./log");
+const { getSubmissions } = require("./submissions");
+const csv = require("./csvFile");
+const ldap = require("./ldap");
+
 const canvasHost = process.env.CANVAS_HOST || "kth.test.instructure.com";
 const canvasApiUrl = `https://${canvasHost}/api/v1`;
 const isAllowed = require("./isAllowed");
@@ -66,7 +66,7 @@ async function getAccessToken({ clientId, clientSecret, redirectUri, code }) {
       client_id: clientId,
       client_secret: clientSecret,
       redirect_uri: redirectUri,
-      code: code,
+      code,
     },
     json: true,
   });
@@ -90,7 +90,7 @@ async function getAssignmentIdsAndHeaders({ canvasApi, canvasCourseId }) {
 }
 
 async function createFixedColumnsContent(
-  { student, ldapClient, section, canvasUser },
+  { student, ldapClient, canvasUser },
   { log = defaultLog } = {}
 ) {
   let row;
@@ -259,12 +259,13 @@ function exportDone(req, res) {
   <div aria-live="polite" role="alert" class="alert alert-success">Done. The file should now be downloaded to your computer.</div>`);
 }
 
-async function getCustomColumnsFn({ canvasApi, canvasCourseId, canvasApiUrl }) {
+async function getCustomColumnsFn({ canvasApi, canvasCourseId }) {
   const customColumnsData = {};
   const customColumns = await canvasApi.get(
     `/courses/${canvasCourseId}/custom_gradebook_columns`
   );
   for (const customColumn of customColumns) {
+    // eslint-disable-next-line no-await-in-loop
     const data = await canvasApi.get(
       `/courses/${canvasCourseId}/custom_gradebook_columns/${customColumn.id}/data`
     );
@@ -287,9 +288,11 @@ function getCustomColumnHeaders(customColumns) {
 }
 
 async function exportResults3(req, res) {
-  req.setTimeout && req.setTimeout(10 * 60 * 1000);
+  if (req.setTimeout) {
+    req.setTimeout(10 * 60 * 1000);
+  }
   const correlationId = req.query.correlationId || req.id;
-  const courseRound = req.query.courseRound;
+  const { courseRound, canvasCourseId } = req.query;
   const fileName = `${courseRound || "canvas"}-${moment().format(
     "YYYYMMDD-HHMMSS"
   )}-results.csv`;
@@ -298,7 +301,6 @@ async function exportResults3(req, res) {
     correlation_id: correlationId,
   });
 
-  const canvasCourseId = req.query.canvasCourseId;
   log.info(`Should export for ${courseRound} / ${canvasCourseId}`);
 
   let accessToken;
@@ -401,9 +403,11 @@ async function exportResults3(req, res) {
     for (const student of students) {
       let ldapClient;
       try {
+        // eslint-disable-next-line no-await-in-loop
         ldapClient = await ldap.getBoundClient({ log });
         const canvasUser = usersInCourse.find((u) => u.id === student.user_id);
         const customColumnsData = getCustomColumnsData(student.user_id);
+        // eslint-disable-next-line no-await-in-loop
         const csvLine = await createCsvLineContent(
           {
             student,
@@ -427,6 +431,7 @@ async function exportResults3(req, res) {
           "An error occured when exporting a student. Something is probably missing in this file."
         );
       } finally {
+        // eslint-disable-next-line no-await-in-loop
         await ldapClient.unbind();
       }
     }

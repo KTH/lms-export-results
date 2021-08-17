@@ -1,13 +1,25 @@
-"use strict";
 const server = require("kth-node-server");
+const path = require("path");
+const express = require("express");
+const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
+const uuid = require("uuid/v4");
+const logger = require("./log");
+const {
+  exportResults,
+  exportResults2,
+  exportResults3,
+  exportDone,
+} = require("./export");
+const systemroutes = require("./systemroutes");
+const exportroutes = require("./exportroutes");
+
 const prefix = "/api/lms-export-results";
 
 /* *******************************
  * *******KTH STYLE *******
  * *******************************
  */
-const path = require("path");
-const express = require("express");
 
 server.use(
   prefix + "/kth-style",
@@ -18,8 +30,7 @@ server.use(
  * ******* REQUEST PARSING *******
  * *******************************
  */
-const bodyParser = require("body-parser");
-const cookieParser = require("cookie-parser");
+
 server.use(bodyParser.json());
 server.use(bodyParser.urlencoded({ extended: true }));
 server.use(cookieParser());
@@ -28,8 +39,7 @@ server.use(cookieParser());
  * *** PER-REQUEST MIDDLEWARE ****
  * *******************************
  */
-const uuid = require("uuid/v4");
-const logger = require("./log");
+
 server.use((req, res, next) => {
   req.id = uuid();
   req.log = logger.child({
@@ -43,15 +53,6 @@ server.use((req, res, next) => {
  * ******* APPLICATION ROUTES *******
  * **********************************
  */
-
-const {
-  exportResults,
-  exportResults2,
-  exportResults3,
-  exportDone,
-} = require("./export");
-const systemroutes = require("./systemroutes");
-const exportroutes = require("./exportroutes");
 
 server.use(prefix, systemroutes);
 server.use(prefix + "/v2", exportroutes);

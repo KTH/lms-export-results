@@ -1,7 +1,6 @@
-const defaultLog = require("./log");
 const { Client } = require("ldapts");
 
-async function getBoundClient({ log = defaultLog } = {}) {
+async function getBoundClient() {
   const ldapClient = new Client({
     url: process.env.LDAP_URL,
   });
@@ -11,7 +10,7 @@ async function getBoundClient({ log = defaultLog } = {}) {
   return ldapClient;
 }
 
-async function lookupUser(ldapClient, kthid, { log = defaultLog } = {}) {
+async function lookupUser(ldapClient, kthid) {
   const { searchEntries } = await ldapClient.search(process.env.LDAP_BASE, {
     scope: "sub",
     filter: `(ugKthId=${kthid})`,

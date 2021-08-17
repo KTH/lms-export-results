@@ -1,14 +1,17 @@
+/* eslint-disable no-console */
+/* eslint-disable import/no-unresolved */
 const test = require("tape");
 require("dotenv").config({ path: "test/.env" });
 const randomstring = require("randomstring");
 
 const webdriver = require("selenium-webdriver");
-const By = webdriver.By;
 const rimraf = require("rimraf-promise");
 const firefox = require("selenium-webdriver/firefox");
-const CanvasApi = require("kth-canvas-api");
-const folderName = "/tmp/lms-export-results";
 const fs = require("fs");
+const CanvasApi = require("kth-canvas-api");
+
+const { By } = webdriver;
+const folderName = "/tmp/lms-export-results";
 const canvasApi = new CanvasApi(
   process.env.CANVAS_API_URL,
   process.env.CANVAS_API_TOKEN
