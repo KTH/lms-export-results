@@ -1,17 +1,17 @@
-const test = require('tape')
-const sinon = require('sinon')
-const rewire = require('rewire')
-const _export = rewire('../../server/export')
+const test = require("tape");
+const sinon = require("sinon");
+const rewire = require("rewire");
+const _export = rewire("../../server/export");
 
-const getCustomColumnsFn = _export.__get__('getCustomColumnsFn')
+const getCustomColumnsFn = _export.__get__("getCustomColumnsFn");
 
-test('should return a function with user_id as argument, and the column data as return value', async t => {
-  const userId = 123456
-  const canvasCourseId = 0
-  const canvasApi = { get: sinon.stub() }
-  const canvasApiUrl = ''
-  const columnId = 1
-  const columnId2 = 2
+test("should return a function with user_id as argument, and the column data as return value", async (t) => {
+  const userId = 123456;
+  const canvasCourseId = 0;
+  const canvasApi = { get: sinon.stub() };
+  const canvasApiUrl = "";
+  const columnId = 1;
+  const columnId2 = 2;
 
   // Columns
   canvasApi.get
@@ -19,19 +19,19 @@ test('should return a function with user_id as argument, and the column data as 
     .returns([
       {
         id: columnId,
-        title: 'Anteckningar',
+        title: "Anteckningar",
         position: 1,
         teacher_notes: true,
-        hidden: false
+        hidden: false,
       },
       {
         id: columnId2,
-        title: 'Nån annan kolumn',
+        title: "Nån annan kolumn",
         position: 2,
         teacher_notes: false,
-        hidden: false
-      }
-    ])
+        hidden: false,
+      },
+    ]);
 
   // Column data
   canvasApi.get
@@ -40,10 +40,10 @@ test('should return a function with user_id as argument, and the column data as 
     )
     .returns([
       {
-        content: 'en anteckning...',
-        user_id: userId
-      }
-    ])
+        content: "en anteckning...",
+        user_id: userId,
+      },
+    ]);
 
   canvasApi.get
     .withArgs(
@@ -51,88 +51,88 @@ test('should return a function with user_id as argument, and the column data as 
     )
     .returns([
       {
-        content: 'Nåt annat data i en kolumn',
-        user_id: userId
-      }
-    ])
+        content: "Nåt annat data i en kolumn",
+        user_id: userId,
+      },
+    ]);
 
   const { getCustomColumnsData } = await getCustomColumnsFn({
     canvasApi,
     canvasCourseId,
-    canvasApiUrl
-  })
-  const result = getCustomColumnsData(userId)
+    canvasApiUrl,
+  });
+  const result = getCustomColumnsData(userId);
   const expected = {
-    [columnId]: 'en anteckning...',
-    [columnId2]: 'Nåt annat data i en kolumn'
-  }
-  t.deepEqual(result, expected)
-  t.end()
-})
+    [columnId]: "en anteckning...",
+    [columnId2]: "Nåt annat data i en kolumn",
+  };
+  t.deepEqual(result, expected);
+  t.end();
+});
 
-test('should sort the custom column headers by position', t => {
+test("should sort the custom column headers by position", (t) => {
   const customColumns = [
     {
       id: 185,
-      title: 'Anteckningar 2',
+      title: "Anteckningar 2",
       position: 2,
       teacher_notes: true,
-      hidden: false
+      hidden: false,
     },
     {
       id: 184,
-      title: 'Anteckningar',
+      title: "Anteckningar",
       position: 1,
       teacher_notes: true,
-      hidden: false
-    }
-  ]
-  const getCustomColumnHeaders = _export.__get__('getCustomColumnHeaders')
-  const result = getCustomColumnHeaders(customColumns)
-  t.deepEqual(result, ['Anteckningar', 'Anteckningar 2'])
-  t.end()
-})
+      hidden: false,
+    },
+  ];
+  const getCustomColumnHeaders = _export.__get__("getCustomColumnHeaders");
+  const result = getCustomColumnHeaders(customColumns);
+  t.deepEqual(result, ["Anteckningar", "Anteckningar 2"]);
+  t.end();
+});
 
 test(`should return an array with the custom columns data,
   or empty string if no data exists,
-  sorted by custom columns position`, t => {
-  const customColumnsData = { 184: 'en anteckning...' }
+  sorted by custom columns position`, (t) => {
+  const customColumnsData = { 184: "en anteckning..." };
   const customColumns = [
     {
       id: 185,
-      title: 'Anteckningar 2',
+      title: "Anteckningar 2",
       position: 2,
       teacher_notes: true,
-      hidden: false
+      hidden: false,
     },
     {
       id: 184,
-      title: 'Anteckningar',
+      title: "Anteckningar",
       position: 1,
       teacher_notes: true,
-      hidden: false
-    }
-  ]
+      hidden: false,
+    },
+  ];
   const createCustomColumnsContent = _export.__get__(
-    'createCustomColumnsContent'
-  )
+    "createCustomColumnsContent"
+  );
   const result = createCustomColumnsContent({
     customColumns,
-    customColumnsData
-  })
-  t.deepEqual(result, ['en anteckning...', ''])
-  t.end()
-})
+    customColumnsData,
+  });
+  t.deepEqual(result, ["en anteckning...", ""]);
+  t.end();
+});
 
 test(`should return a function with user_id as argument,
   and an object as result
   if the user has no data for the custom columns
-  `, async t => {
-  const userId2 = 456
-  const canvasCourseId = 0
-  const canvasApi = { get: sinon.stub() }
-  const canvasApiUrl = ''
-  const columnId = 1
+  `, async (t) => {
+  const userId2 = 456;
+  const canvasCourseId = 0;
+  const canvasApi = { get: sinon.stub() };
+  const canvasApiUrl = "";
+  const columnId = 1;
 
   // Columns
   canvasApi.get
@@ -140,27 +140,27 @@ test(`should return a function with user_id as argument,
     .returns([
       {
         id: columnId,
-        title: 'Anteckningar',
+        title: "Anteckningar",
         position: 1,
         teacher_notes: true,
-        hidden: false
-      }
-    ])
+        hidden: false,
+      },
+    ]);
 
   // Column data
   canvasApi.get
     .withArgs(
       `/courses/${canvasCourseId}/custom_gradebook_columns/${columnId}/data`
     )
-    .returns([])
+    .returns([]);
 
   const { getCustomColumnsData } = await getCustomColumnsFn({
     canvasApi,
     canvasCourseId,
-    canvasApiUrl
-  })
-  const result = getCustomColumnsData(userId2)
-  const expected = {}
-  t.deepEqual(result, expected)
-  t.end()
-})
+    canvasApiUrl,
+  });
+  const result = getCustomColumnsData(userId2);
+  const expected = {};
+  t.deepEqual(result, expected);
+  t.end();
+});

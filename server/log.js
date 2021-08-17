@@ -1,15 +1,15 @@
-const bunyan = require('bunyan')
-const packageFile = require('../package.json')
+const bunyan = require("bunyan");
+const packageFile = require("../package.json");
 
-function init (extraConfig) {
+function init(extraConfig) {
   return bunyan.createLogger({
-    name: (extraConfig && extraConfig.name) || 'lms-export-logger',
+    name: (extraConfig && extraConfig.name) || "lms-export-logger",
     app: packageFile.name,
-    ...extraConfig
-  })
+    ...extraConfig,
+  });
 }
 // Export a logger
-module.exports = init({})
+module.exports = init({});
 
 // Also export a function to create another logger
-module.exports.init = init
+module.exports.init = init;
