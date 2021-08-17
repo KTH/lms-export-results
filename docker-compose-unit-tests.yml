@@ -1,4 +1,4 @@
-version: "3.2"
+version: "3.8"
 
 services:
   #############################################
@@ -6,7 +6,7 @@ services:
   #############################################
   unit_tests:
     image: $LOCAL_IMAGE_ID
-    context: "development"
+    target: "development"
 
     # Since we do not want to add tests to our
     # production image. We mount the catalog
