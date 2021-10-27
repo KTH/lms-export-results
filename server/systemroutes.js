@@ -1,6 +1,5 @@
 const express = require("express");
 const packageFile = require("../package.json");
-const defaultLog = require("./log");
 const version = require("../config/version");
 
 const router = express.Router();
