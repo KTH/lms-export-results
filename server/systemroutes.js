@@ -1,7 +1,6 @@
 const express = require("express");
 const packageFile = require("../package.json");
 const defaultLog = require("./log");
-const ldap = require("./ldap");
 const version = require("../config/version");
 
 const router = express.Router();
@@ -22,8 +21,6 @@ function _about(req, res) {
 }
 
 async function _monitor(req, res) {
-  const log = req.log || defaultLog;
-
   res.setHeader("Content-Type", "text/plain");
   res.send("APPLICATION_STATUS: OK");
 }
