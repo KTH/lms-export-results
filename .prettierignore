@@ -42,3 +42,6 @@ node_modules/*
 coverage
 
 cypress.json
+
+# stratus ci
+.azure/
