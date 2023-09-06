@@ -347,8 +347,10 @@ async function exportResults3(req, res) {
     // Start writing response as soon as possible
     res.set({
       "content-type": "text/csv; charset=utf-8",
-      "transfer-encoding": "chunked",
+      "Transfer-Encoding": "chunked",
       location: "http://www.kth.se",
+      "X-random-header": "value_value",
+      "X-Accel-Buffering": "no",
     });
     res.attachment(fileName);
     // Write BOM https://sv.wikipedia.org/wiki/Byte_order_mark
