@@ -33,9 +33,11 @@
     "uuid": "^3.3.3"
   },
   "devDependencies": {
+    "@kth/canvas-api": "^4.2.5",
     "@kth/eslint-config-kth": "^1.0.13",
     "eslint": "^6.8.0",
     "fs-extra": "^7.0.1",
+    "inquirer": "^8.2.6",
     "nodemon": "^2.0.3",
     "prettier": "^2.3.2",
     "proxyquire": "^2.1.3",
