@@ -215,6 +215,7 @@ router.get("/file", async (req, res) => {
   res.set({
     "content-type": "text/csv; charset=utf-8",
     location: "https://www.kth.se",
+    "transfer-encoding": "chunked",
   });
   res.attachment(fileName);
   res.write("\uFEFF");
