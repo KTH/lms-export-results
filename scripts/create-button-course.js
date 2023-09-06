@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+/* eslint-disable import/no-extraneous-dependencies */
 // @ts-check
 const inquirer = require("inquirer");
 const Canvas = require("@kth/canvas-api").default;
