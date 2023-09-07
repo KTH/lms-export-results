@@ -12,7 +12,6 @@ const {
   exportDone,
 } = require("./export");
 const systemroutes = require("./systemroutes");
-const exportroutes = require("./exportroutes");
 
 const prefix = "/api/lms-export-results";
 
@@ -55,7 +54,6 @@ server.use((req, res, next) => {
  */
 
 server.use(prefix, systemroutes);
-server.use(prefix + "/v2", exportroutes);
 
 server.get(prefix, (req, res) => res.redirect(`${prefix}/_about`));
 
