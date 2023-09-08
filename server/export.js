@@ -11,6 +11,7 @@ const ldap = require("./ldap");
 const canvasHost = process.env.CANVAS_HOST || "kth.test.instructure.com";
 const canvasApiUrl = `https://${canvasHost}/api/v1`;
 const isAllowed = require("./isAllowed");
+const LadokApi = require("./ladokApi");
 
 function exportResults(req, res) {
   const correlationId = req.id;
@@ -61,14 +62,14 @@ async function getAccessToken({ clientId, clientSecret, redirectUri, code }) {
   const { body } = await got({
     method: "POST",
     url: `https://${canvasHost}/login/oauth2/token`,
-    body: {
+    responseType: "json",
+    json: {
       grant_type: "authorization_code",
       client_id: clientId,
       client_secret: clientSecret,
       redirect_uri: redirectUri,
       code,
     },
-    json: true,
   });
   return body.access_token;
 }
@@ -90,13 +91,16 @@ async function getAssignmentIdsAndHeaders({ canvasApi, canvasCourseId }) {
 }
 
 async function createFixedColumnsContent(
-  { student, ldapClient, canvasUser },
+  { student, ldapClient, canvasUser, ladokApi },
   { log = defaultLog } = {}
 ) {
   let row;
   try {
+    const personnummer = await ladokApi.getPersonalNumber(
+      student.integration_id
+    );
     const ugUser = await ldap.lookupUser(ldapClient, student.sis_user_id);
-    const personnummer = ugUser.norEduPersonNIN;
+    // const personnummer = ugUser.norEduPersonNIN;
     row = {
       kthid: student.sis_user_id,
       givenName: ugUser.givenName,
@@ -158,11 +162,12 @@ async function createCsvLineContent(
     canvasUser,
     customColumns,
     customColumnsData,
+    ladokApi,
   },
   { log = defaultLog } = {}
 ) {
   const fixedColumnsContent = await createFixedColumnsContent(
-    { student, ldapClient, assignmentIds, canvasUser },
+    { student, ldapClient, assignmentIds, canvasUser, ladokApi },
     { log }
   );
   const customColumnsContent = createCustomColumnsContent({
@@ -396,6 +401,7 @@ async function exportResults3(req, res) {
     const sections = await canvasApi.get(
       `courses/${canvasCourseId}/sections?include[]=students`
     );
+    const sectionsLadokId = sections.map((s) => s.sis_section_id);
     const students = await getSubmissions({
       canvasCourseId,
       sections,
@@ -404,21 +410,19 @@ async function exportResults3(req, res) {
     });
 
     for (const student of students) {
-      let ldapClient;
+      const ladokApi = new LadokApi(sectionsLadokId);
       try {
-        // eslint-disable-next-line no-await-in-loop
-        ldapClient = await ldap.getBoundClient({ log });
         const canvasUser = usersInCourse.find((u) => u.id === student.user_id);
         const customColumnsData = getCustomColumnsData(student.user_id);
         // eslint-disable-next-line no-await-in-loop
         const csvLine = await createCsvLineContent(
           {
             student,
-            ldapClient,
             assignmentIds,
             canvasUser,
             customColumns,
             customColumnsData,
+            ladokApi,
           },
           {
             log,
@@ -433,9 +437,6 @@ async function exportResults3(req, res) {
         res.write(
           "An error occured when exporting a student. Something is probably missing in this file."
         );
-      } finally {
-        // eslint-disable-next-line no-await-in-loop
-        await ldapClient.unbind();
       }
     }
   } catch (e) {
