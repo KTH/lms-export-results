@@ -63,9 +63,9 @@ async function _searchAllStudieresultat(UID, KurstillfallenUID) {
 }
 
 /** Given a list of kurstillfalle UID, get a map of student IDs and their personal number */
-async function getPersonalNumbers(kurstillfalleIds) {
+async function getStudentData(kurstillfalleIds) {
   // Get all "Utbildningsinstans"
-  const mapWithPersonalNumbers = new Map();
+  const mapWithPersonalInformation = new Map();
   const utbildningsinstansUIDs = new Set();
 
   for (const kurstillfalleId of kurstillfalleIds) {
@@ -84,26 +84,30 @@ async function getPersonalNumbers(kurstillfalleIds) {
     );
 
     for (const s of studieresultat) {
-      mapWithPersonalNumbers.set(s.Student.Uid, s.Student.Personnummer);
+      mapWithPersonalInformation.set(s.Student.Uid, {
+        personnummer: s.Student.Personnummer,
+        givenName: s.Student.Fornamn,
+        surname: s.student.Efternamn,
+      });
     }
   }
 
-  return mapWithPersonalNumbers;
+  return mapWithPersonalInformation;
 }
 
 module.exports = class LadokApi {
   /** Prepares a Ladok Client to get students given a list of course rounds */
   constructor(kurstillfalleIds) {
     this.kurstillfalleIds = kurstillfalleIds;
-    this.personalNumbers = null;
+    this.personalInformation = null;
   }
 
   /** Return the personal number given a Ladok ID of a student */
-  async getPersonalNumber(studentUid) {
-    if (!this.personalNumbers) {
-      this.personalNumbers = await getPersonalNumbers(this.kurstillfalleIds);
+  async getPersonalInformation(studentUid) {
+    if (!this.personalInformation) {
+      this.personalInformation = await getStudentData(this.kurstillfalleIds);
     }
 
-    return this.personalNumbers.get(studentUid);
+    return this.personalInformation.get(studentUid);
   }
 };
