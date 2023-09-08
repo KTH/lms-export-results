@@ -6,12 +6,11 @@ const _ = require("lodash");
 const defaultLog = require("./log");
 const { getSubmissions } = require("./submissions");
 const csv = require("./csvFile");
-const ldap = require("./ldap");
 
 const canvasHost = process.env.CANVAS_HOST || "kth.test.instructure.com";
 const canvasApiUrl = `https://${canvasHost}/api/v1`;
 const isAllowed = require("./isAllowed");
-const LadokApi = require("./ladokApi");
+const { getStudentData } = require("./ladokApi");
 
 function exportResults(req, res) {
   const correlationId = req.id;
@@ -91,30 +90,24 @@ async function getAssignmentIdsAndHeaders({ canvasApi, canvasCourseId }) {
 }
 
 async function createFixedColumnsContent(
-  { student, ldapClient, canvasUser, ladokApi },
+  { student, canvasUser },
   { log = defaultLog } = {}
 ) {
   let row;
   try {
-    const personnummer = await ladokApi.getPersonalNumber(
-      student.integration_id
-    );
-    const ugUser = await ldap.lookupUser(ldapClient, student.sis_user_id);
-    // const personnummer = ugUser.norEduPersonNIN;
+    const ladokStudent = await getStudentData(student.integration_id);
+
     row = {
       kthid: student.sis_user_id,
-      givenName: ugUser.givenName,
-      surname: ugUser.sn,
-      personnummer:
-        personnummer &&
-        (personnummer.length === 12 ? personnummer.slice(2) : personnummer),
+      givenName: ladokStudent?.givenName,
+      surname: ladokStudent?.surname,
+      personnummer: ladokStudent?.personnummer,
     };
   } catch (err) {
     log.error(
-      `An error occured while trying to find user ${student.sis_user_id} in ldap`,
+      `An error occured while trying to find user ${student.sis_user_id} in Ladok`,
       err
     );
-    log.info("No user from ldap, use empty row instead");
     row = {};
   }
 
@@ -122,7 +115,7 @@ async function createFixedColumnsContent(
     student.sis_user_id || "",
     student.user_id || "",
     student.section_names || "",
-    row.givenName || (canvasUser && canvasUser.name) || "", // Prefer name from ldap, but if it doesn't exist, use the name in Canvas.
+    row.givenName || (canvasUser && canvasUser.name) || "", // Prefer name from Ladok, but if it doesn't exist, use the name in Canvas.
     row.surname || "",
     `="${row.personnummer || ""}"`,
     (canvasUser && canvasUser.login_id) ||
@@ -162,12 +155,11 @@ async function createCsvLineContent(
     canvasUser,
     customColumns,
     customColumnsData,
-    ladokApi,
   },
   { log = defaultLog } = {}
 ) {
   const fixedColumnsContent = await createFixedColumnsContent(
-    { student, ldapClient, assignmentIds, canvasUser, ladokApi },
+    { student, assignmentIds, canvasUser },
     { log }
   );
   const customColumnsContent = createCustomColumnsContent({
@@ -401,7 +393,6 @@ async function exportResults3(req, res) {
     const sections = await canvasApi.get(
       `courses/${canvasCourseId}/sections?include[]=students`
     );
-    const sectionsLadokId = sections.map((s) => s.sis_section_id);
     const students = await getSubmissions({
       canvasCourseId,
       sections,
@@ -410,7 +401,6 @@ async function exportResults3(req, res) {
     });
 
     for (const student of students) {
-      const ladokApi = new LadokApi(sectionsLadokId);
       try {
         const canvasUser = usersInCourse.find((u) => u.id === student.user_id);
         const customColumnsData = getCustomColumnsData(student.user_id);
@@ -422,7 +412,6 @@ async function exportResults3(req, res) {
             canvasUser,
             customColumns,
             customColumnsData,
-            ladokApi,
           },
           {
             log,
@@ -447,7 +436,6 @@ async function exportResults3(req, res) {
     );
   }
 
-  log.info("Finish the response and close ldap client.");
   res.send();
 }
 
