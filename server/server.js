@@ -82,7 +82,7 @@ function msleep(n) {
 }
 
 server.get(prefix + "/timeout-test", (req, res) => {
-  console.info("req received");
+  req.log.info("req received");
   if (req.setTimeout) {
     req.setTimeout(10 * 60 * 1000);
   }
@@ -98,10 +98,10 @@ server.get(prefix + "/timeout-test", (req, res) => {
   // Write BOM https://sv.wikipedia.org/wiki/Byte_order_mark
   res.write("\uFEFF");
 
-  console.info("waiting");
+  req.log.info("waiting");
   const sleepMs = req.query.sleepMs || 5 * 60 * 1000; // 5 min default
   msleep(sleepMs);
-  console.info("done");
+  req.log.info("done");
   res.write("waited " + sleepMs + " ms");
   res.send();
 });
