@@ -76,6 +76,36 @@ server.get(prefix + "/test", (req, res) =>
   `)
 );
 
+// https://www.npmjs.com/package/sleep#alternative
+function msleep(n) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, n);
+}
+
+server.get(prefix + "/timeout-test", (req, res) => {
+  console.info("req received");
+  if (req.setTimeout) {
+    req.setTimeout(10 * 60 * 1000);
+  }
+
+  res.set({
+    "content-type": "text/csv; charset=utf-8",
+    "Transfer-Encoding": "chunked",
+    location: "http://www.kth.se",
+    "X-random-header": "value_value",
+    "X-Accel-Buffering": "no",
+  });
+  res.attachment("my-filename.csv");
+  // Write BOM https://sv.wikipedia.org/wiki/Byte_order_mark
+  res.write("\uFEFF");
+
+  console.info("waiting");
+  const sleepMs = req.query.sleepMs || 5 * 60 * 1000; // 5 min default
+  msleep(sleepMs);
+  console.info("done");
+  res.write("waited " + sleepMs + " ms");
+  res.send();
+});
+
 // Catch not found and errors
 
 // Expose the server and paths
