@@ -344,9 +344,7 @@ async function exportResults3(req, res) {
     // Start writing response as soon as possible
     res.set({
       "content-type": "text/csv; charset=utf-8",
-      "Transfer-Encoding": "chunked",
       location: "http://www.kth.se",
-      "X-random-header": "value_value",
       "X-Accel-Buffering": "no",
     });
     res.attachment(fileName);
