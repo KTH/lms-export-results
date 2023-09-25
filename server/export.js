@@ -99,9 +99,9 @@ async function createFixedColumnsContent(
 
     row = {
       kthid: student.sis_user_id,
-      givenName: ladokStudent?.givenName,
-      surname: ladokStudent?.surname,
-      personnummer: ladokStudent?.personnummer,
+      givenName: ladokStudent.givenName,
+      surname: ladokStudent.surname,
+      personnummer: ladokStudent.personnummer,
     };
   } catch (err) {
     log.error(
