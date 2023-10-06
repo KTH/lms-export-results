@@ -6,11 +6,11 @@ const _ = require("lodash");
 const defaultLog = require("./log");
 const { getSubmissions } = require("./submissions");
 const csv = require("./csvFile");
-const ldap = require("./ldap");
 
 const canvasHost = process.env.CANVAS_HOST || "kth.test.instructure.com";
 const canvasApiUrl = `https://${canvasHost}/api/v1`;
 const isAllowed = require("./isAllowed");
+const { getStudentData } = require("./ladokApi");
 
 function exportResults(req, res) {
   const correlationId = req.id;
@@ -61,14 +61,14 @@ async function getAccessToken({ clientId, clientSecret, redirectUri, code }) {
   const { body } = await got({
     method: "POST",
     url: `https://${canvasHost}/login/oauth2/token`,
-    body: {
+    responseType: "json",
+    json: {
       grant_type: "authorization_code",
       client_id: clientId,
       client_secret: clientSecret,
       redirect_uri: redirectUri,
       code,
     },
-    json: true,
   });
   return body.access_token;
 }
@@ -90,27 +90,24 @@ async function getAssignmentIdsAndHeaders({ canvasApi, canvasCourseId }) {
 }
 
 async function createFixedColumnsContent(
-  { student, ldapClient, canvasUser },
+  { student, canvasUser },
   { log = defaultLog } = {}
 ) {
   let row;
   try {
-    const ugUser = await ldap.lookupUser(ldapClient, student.sis_user_id);
-    const personnummer = ugUser.norEduPersonNIN;
+    const ladokStudent = await getStudentData(student.integration_id);
+
     row = {
       kthid: student.sis_user_id,
-      givenName: ugUser.givenName,
-      surname: ugUser.sn,
-      personnummer:
-        personnummer &&
-        (personnummer.length === 12 ? personnummer.slice(2) : personnummer),
+      givenName: ladokStudent.givenName,
+      surname: ladokStudent.surname,
+      personnummer: ladokStudent.personnummer,
     };
   } catch (err) {
     log.error(
-      `An error occured while trying to find user ${student.sis_user_id} in ldap`,
+      `An error occured while trying to find user ${student.sis_user_id} in Ladok`,
       err
     );
-    log.info("No user from ldap, use empty row instead");
     row = {};
   }
 
@@ -118,7 +115,7 @@ async function createFixedColumnsContent(
     student.sis_user_id || "",
     student.user_id || "",
     student.section_names || "",
-    row.givenName || (canvasUser && canvasUser.name) || "", // Prefer name from ldap, but if it doesn't exist, use the name in Canvas.
+    row.givenName || (canvasUser && canvasUser.name) || "", // Prefer name from Ladok, but if it doesn't exist, use the name in Canvas.
     row.surname || "",
     `="${row.personnummer || ""}"`,
     (canvasUser && canvasUser.login_id) ||
@@ -162,7 +159,7 @@ async function createCsvLineContent(
   { log = defaultLog } = {}
 ) {
   const fixedColumnsContent = await createFixedColumnsContent(
-    { student, ldapClient, assignmentIds, canvasUser },
+    { student, assignmentIds, canvasUser },
     { log }
   );
   const customColumnsContent = createCustomColumnsContent({
@@ -348,6 +345,7 @@ async function exportResults3(req, res) {
     res.set({
       "content-type": "text/csv; charset=utf-8",
       location: "http://www.kth.se",
+      "X-Accel-Buffering": "no",
     });
     res.attachment(fileName);
     // Write BOM https://sv.wikipedia.org/wiki/Byte_order_mark
@@ -401,17 +399,13 @@ async function exportResults3(req, res) {
     });
 
     for (const student of students) {
-      let ldapClient;
       try {
-        // eslint-disable-next-line no-await-in-loop
-        ldapClient = await ldap.getBoundClient({ log });
         const canvasUser = usersInCourse.find((u) => u.id === student.user_id);
         const customColumnsData = getCustomColumnsData(student.user_id);
         // eslint-disable-next-line no-await-in-loop
         const csvLine = await createCsvLineContent(
           {
             student,
-            ldapClient,
             assignmentIds,
             canvasUser,
             customColumns,
@@ -430,9 +424,6 @@ async function exportResults3(req, res) {
         res.write(
           "An error occured when exporting a student. Something is probably missing in this file."
         );
-      } finally {
-        // eslint-disable-next-line no-await-in-loop
-        await ldapClient.unbind();
       }
     }
   } catch (e) {
@@ -443,7 +434,6 @@ async function exportResults3(req, res) {
     );
   }
 
-  log.info("Finish the response and close ldap client.");
   res.send();
 }
 

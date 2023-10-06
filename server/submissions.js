@@ -24,6 +24,7 @@ function extractUniqueStudentsAndSectionNamesFromSections(sections) {
               section_names: sectionName,
               submissions: [], // Add this to preserve the order of the properties, to make deepEqual possible
               sis_user_id: currentStudent.sis_user_id,
+              integration_id: currentStudent.integration_id,
             });
           }
         }
